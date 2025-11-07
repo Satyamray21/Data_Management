@@ -10,53 +10,36 @@ import {
   Button,
 } from "@mui/material";
 import { Home as HomeIcon, UploadFile as UploadFileIcon } from "@mui/icons-material";
-import { useFormik } from "formik";
 import StyledTextField from "../../ui/StyledTextField";
 import SectionHeader from "../../layout/SectionHeader";
 
-const AddressForm = () => {
-  const formik = useFormik({
-    initialValues: {
-      permanentAddress: {
-        flatHouseNo: "",
-        areaStreetSector: "",
-        locality: "",
-        landmark: "",
-        city: "",
-        country: "",
-        state: "",
-        pincode: "",
-        proofDocument: null,
-      },
-      sameAsPermanent: false,
-      currentResidentialAddress: {
-        flatHouseNo: "",
-        areaStreetSector: "",
-        locality: "",
-        landmark: "",
-        city: "",
-        country: "",
-        state: "",
-        pincode: "",
-        proofDocument: null,
-      },
-    },
-    onSubmit: (values) => {
-      console.log("Form Submitted:", values);
-    },
-  });
+const AddressForm = ({ formData, handleChange, handleNestedChange }) => {
+  const addressData = formData.Address;
 
-  //  Copy current → permanent when checked
+  // Handle changes for address fields
+  const handleAddressFieldChange = (addressType, field, value) => {
+    handleNestedChange('Address', addressType, field, value);
+  };
+
+  // Handle file upload
+  const handleFileUpload = (addressType, file) => {
+    handleNestedChange('Address', addressType, 'proofDocument', file);
+  };
+
+  // Copy current → permanent when checked
   const handleSameAddress = (e) => {
     const checked = e.target.checked;
-    formik.setFieldValue("sameAsPermanent", checked);
+    handleChange('Address', 'sameAsPermanent', checked);
+    
     if (checked) {
-      formik.setFieldValue(
-        "permanentAddress",
-        { ...formik.values.currentResidentialAddress }
-      );
+      // Copy current residential address to permanent address
+      const currentAddress = { ...addressData.currentResidentialAddress };
+      Object.keys(currentAddress).forEach(field => {
+        handleNestedChange('Address', 'permanentAddress', field, currentAddress[field]);
+      });
     } else {
-      formik.setFieldValue("permanentAddress", {
+      // Reset permanent address
+      const resetAddress = {
         flatHouseNo: "",
         areaStreetSector: "",
         locality: "",
@@ -66,87 +49,85 @@ const AddressForm = () => {
         state: "",
         pincode: "",
         proofDocument: null,
+      };
+      Object.keys(resetAddress).forEach(field => {
+        handleNestedChange('Address', 'permanentAddress', field, resetAddress[field]);
       });
     }
   };
 
-  // ✅ Handle file upload
-  const handleFileUpload = (prefix, file) => {
-    formik.setFieldValue(`${prefix}.proofDocument`, file);
-  };
-
-  const renderAddressFields = (prefix, values) => (
+  const renderAddressFields = (addressType, values) => (
     <Grid container spacing={2}>
       <Grid item xs={12} sm={6}>
         <StyledTextField
           label="Flat No. / House No. / Building"
-          name={`${prefix}.flatHouseNo`}
-          value={values.flatHouseNo}
-          onChange={formik.handleChange}
+          name={`${addressType}.flatHouseNo`}
+          value={values.flatHouseNo || ""}
+          onChange={(e) => handleAddressFieldChange(addressType, 'flatHouseNo', e.target.value)}
         />
       </Grid>
       <Grid item xs={12} sm={6}>
         <StyledTextField
           label="Area / Street / Sector"
-          name={`${prefix}.areaStreetSector`}
-          value={values.areaStreetSector}
-          onChange={formik.handleChange}
+          name={`${addressType}.areaStreetSector`}
+          value={values.areaStreetSector || ""}
+          onChange={(e) => handleAddressFieldChange(addressType, 'areaStreetSector', e.target.value)}
         />
       </Grid>
       <Grid item xs={12} sm={6}>
         <StyledTextField
           label="Locality"
-          name={`${prefix}.locality`}
-          value={values.locality}
-          onChange={formik.handleChange}
+          name={`${addressType}.locality`}
+          value={values.locality || ""}
+          onChange={(e) => handleAddressFieldChange(addressType, 'locality', e.target.value)}
         />
       </Grid>
       <Grid item xs={12} sm={6}>
         <StyledTextField
           label="Landmark"
-          name={`${prefix}.landmark`}
-          value={values.landmark}
-          onChange={formik.handleChange}
+          name={`${addressType}.landmark`}
+          value={values.landmark || ""}
+          onChange={(e) => handleAddressFieldChange(addressType, 'landmark', e.target.value)}
         />
       </Grid>
       <Grid item xs={12} sm={6}>
         <StyledTextField
           label="City"
-          name={`${prefix}.city`}
-          value={values.city}
-          onChange={formik.handleChange}
+          name={`${addressType}.city`}
+          value={values.city || ""}
+          onChange={(e) => handleAddressFieldChange(addressType, 'city', e.target.value)}
         />
       </Grid>
       <Grid item xs={12} sm={6}>
         <StyledTextField
           label="Country"
-          name={`${prefix}.country`}
-          value={values.country}
-          onChange={formik.handleChange}
+          name={`${addressType}.country`}
+          value={values.country || ""}
+          onChange={(e) => handleAddressFieldChange(addressType, 'country', e.target.value)}
         />
       </Grid>
       <Grid item xs={12} sm={6}>
         <StyledTextField
           label="State"
-          name={`${prefix}.state`}
-          value={values.state}
-          onChange={formik.handleChange}
+          name={`${addressType}.state`}
+          value={values.state || ""}
+          onChange={(e) => handleAddressFieldChange(addressType, 'state', e.target.value)}
         />
       </Grid>
       <Grid item xs={12} sm={6}>
         <StyledTextField
           label="Pincode"
-          name={`${prefix}.pincode`}
-          value={values.pincode}
+          name={`${addressType}.pincode`}
+          value={values.pincode || ""}
           onChange={(e) => {
             const onlyNums = e.target.value.replace(/[^0-9]/g, "");
-            formik.setFieldValue(`${prefix}.pincode`, onlyNums);
+            handleAddressFieldChange(addressType, 'pincode', onlyNums);
           }}
           inputProps={{ maxLength: 6 }}
         />
       </Grid>
 
-      {/* ✅ File Upload */}
+      {/* File Upload */}
       <Grid item xs={12}>
         <Button
           variant="outlined"
@@ -161,7 +142,7 @@ const AddressForm = () => {
             type="file"
             hidden
             accept="image/*,application/pdf"
-            onChange={(e) => handleFileUpload(prefix, e.target.files[0])}
+            onChange={(e) => handleFileUpload(addressType, e.target.files[0])}
           />
         </Button>
       </Grid>
@@ -177,76 +158,74 @@ const AddressForm = () => {
           subtitle="Residential information and references"
         />
 
-        <form onSubmit={formik.handleSubmit}>
-          <Grid container spacing={4} sx={{ mt: 2 }}>
-            {/* Current Residential Address FIRST */}
-            <Grid item xs={12} md={6}>
-              <Box
-                sx={{
-                  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                  color: "#fff",
-                  px: 2,
-                  py: 1,
-                  mb: 2,
-                  borderRadius: 2,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
-              >
-                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                  Current Residential Address
-                </Typography>
-              </Box>
+        <Grid container spacing={4} sx={{ mt: 2 }}>
+          {/* Current Residential Address FIRST */}
+          <Grid item xs={12} md={6}>
+            <Box
+              sx={{
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                color: "#fff",
+                px: 2,
+                py: 1,
+                mb: 2,
+                borderRadius: 2,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                Current Residential Address
+              </Typography>
+            </Box>
 
-              {renderAddressFields(
-                "currentResidentialAddress",
-                formik.values.currentResidentialAddress
-              )}
-            </Grid>
-
-            {/* Permanent Address */}
-            <Grid item xs={12} md={6}>
-              <Box
-                sx={{
-                  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                  color: "#fff",
-                  px: 2,
-                  py: 1,
-                  mb: 2,
-                  borderRadius: 2,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
-              >
-                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                  Permanent Address
-                </Typography>
-
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formik.values.sameAsPermanent}
-                      onChange={handleSameAddress}
-                      sx={{ color: "white" }}
-                    />
-                  }
-                  label="Same as Current Address"
-                  sx={{
-                    color: "#fff",
-                    "& .MuiFormControlLabel-label": { fontSize: "0.9rem" },
-                  }}
-                />
-              </Box>
-
-              {renderAddressFields(
-                "permanentAddress",
-                formik.values.permanentAddress
-              )}
-            </Grid>
+            {renderAddressFields(
+              "currentResidentialAddress",
+              addressData.currentResidentialAddress
+            )}
           </Grid>
-        </form>
+
+          {/* Permanent Address */}
+          <Grid item xs={12} md={6}>
+            <Box
+              sx={{
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                color: "#fff",
+                px: 2,
+                py: 1,
+                mb: 2,
+                borderRadius: 2,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                Permanent Address
+              </Typography>
+
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={addressData.sameAsPermanent || false}
+                    onChange={handleSameAddress}
+                    sx={{ color: "white" }}
+                  />
+                }
+                label="Same as Current Address"
+                sx={{
+                  color: "#fff",
+                  "& .MuiFormControlLabel-label": { fontSize: "0.9rem" },
+                }}
+              />
+            </Box>
+
+            {renderAddressFields(
+              "permanentAddress",
+              addressData.permanentAddress
+            )}
+          </Grid>
+        </Grid>
       </CardContent>
     </Card>
   );

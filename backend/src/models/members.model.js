@@ -24,29 +24,27 @@ const memberSchema = new mongoose.Schema(
     // ===== ADDRESS DETAILS =====
     addressDetails: {
       permanentAddress: {
-  flatHouseNo: { type: String },
-  areaStreetSector: { type: String },
-  locality: { type: String },
-  landmark: { type: String },
-  city: { type: String },
-  country: { type: String },
-  state: { type: String },
-  pincode: { type: String },
-},
-
-      permanentAddressBillPhoto: { type: String },
-      currentResidentalAddress:  {
-  flatHouseNo: { type: String },
-  areaStreetSector: { type: String },
-  locality: { type: String },
-  landmark: { type: String },
-  city: { type: String },
-  country: { type: String },
-  state: { type: String },
-  pincode: { type: String },
-},
- 
-      currentResidentalBillPhoto: [{ type: String }],
+        flatHouseNo: { type: String },
+        areaStreetSector: { type: String },
+        locality: { type: String },
+        landmark: { type: String },
+        city: { type: String },
+        country: { type: String },
+        state: { type: String },
+        pincode: { type: String },
+      },
+      permanentAddressBillPhoto: { type: String }, // Fixed: single string, not array
+      currentResidentalAddress: {
+        flatHouseNo: { type: String },
+        areaStreetSector: { type: String },
+        locality: { type: String },
+        landmark: { type: String },
+        city: { type: String },
+        country: { type: String },
+        state: { type: String },
+        pincode: { type: String },
+      },
+      currentResidentalBillPhoto: { type: String }, // Fixed: single string, not array
       previousCurrentAddress: [{ type: String }],
     },
 
@@ -66,7 +64,7 @@ const memberSchema = new mongoose.Schema(
       drivingLicense: { type: String },
       aadhaarNo: { type: String },
       voterId: { type: String },
-      passportNo: { type: String }, // fixed duplicate key
+      passportNo: { type: String },
 
       // Document Photos
       panNoPhoto: { type: String },
@@ -132,9 +130,7 @@ const memberSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-//
-// ===== Middleware to track address changes =====
-//
+// Middleware to track address changes
 memberSchema.pre("save", async function (next) {
   if (!this.isModified("addressDetails.currentResidentalAddress")) return next();
 
