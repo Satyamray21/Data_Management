@@ -149,18 +149,25 @@ const MemberDossierForm = () => {
     { label: "Remarks", icon: "📝" }
   ];
 
-  // Enhanced handleChange with debugging
   const handleChange = useCallback((section, field, value) => {
-    console.log(`🔄 Updating ${section}.${field} to:`, value);
-    
-    setFormData((prev) => ({
+  setFormData((prev) => {
+    if (section === 'bankDetails' || section === 'remarks') {
+      return {
+        ...prev,
+        [section]: value // Directly set the array value
+      };
+    }
+
+    return {
       ...prev,
       [section]: {
         ...prev[section],
         [field]: value,
       },
-    }));
-  }, []);
+    };
+  });
+}, []);
+
 
   // NEW: Deep nested handleChange for address fields
   const handleNestedChange = useCallback((section, subSection, field, value) => {
