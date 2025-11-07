@@ -9,12 +9,43 @@ import {
 } from "../controllers/member.controller.js";
 
 const router = express.Router();
-const upload = multer({ dest: "uploads/" }); // temp local folder
 
-router.post("/", upload.fields([{ name: "passportSize" }, { name: "panNoPhoto" }]), createMember);
+// Updated: Use diskStorage as per your requirement
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, './uploads/') // Make sure this directory exists
+  },
+  filename: function (req, file, cb) {
+    // Add timestamp to avoid filename conflicts
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + '-' + file.originalname);
+  }
+});
+
+const upload = multer({ 
+  storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  }
+});
+
+// Updated: Include all possible file fields
+const fileFields = [
+  { name: "passportSize", maxCount: 1 },
+  { name: "panNoPhoto", maxCount: 1 },
+  { name: "aadhaarNoPhoto", maxCount: 1 },
+  { name: "rationCardPhoto", maxCount: 1 },
+  { name: "drivingLicensePhoto", maxCount: 1 },
+  { name: "voterIdPhoto", maxCount: 1 },
+  { name: "passportNoPhoto", maxCount: 1 },
+  { name: "permanentAddressBillPhoto", maxCount: 1 },
+  { name: "currentResidentalBillPhoto", maxCount: 1 }
+];
+
+router.post("/", upload.fields(fileFields), createMember);
 router.get("/", getAllMembers);
 router.get("/:id", getMemberById);
-router.put("/:id", upload.fields([{ name: "passportSize" }, { name: "panNoPhoto" }]), updateMember);
+router.put("/:id", upload.fields(fileFields), updateMember);
 router.delete("/:id", deleteMember);
 
 export default router;

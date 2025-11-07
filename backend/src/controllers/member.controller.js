@@ -1,6 +1,9 @@
 import Member from "../models/members.model.js";
 import fs from "fs";
 import path from "path";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
+
+
 
 export const createMember = async (req, res) => {
   try {
@@ -20,33 +23,47 @@ export const createMember = async (req, res) => {
       bankDetails
     } = req.body;
 
-    // Process uploaded files
+    // Process uploaded files with Cloudinary
     const fileFields = {};
 
     if (req.files) {
       console.log("📁 Processing files:", Object.keys(req.files));
       
-      // Handle each file field
+      // Handle each file field and upload to Cloudinary
       for (const [fieldname, files] of Object.entries(req.files)) {
         if (files && files[0]) {
           const file = files[0];
           console.log(`📄 Processing file: ${fieldname} - ${file.originalname}`);
           console.log(`📍 File path: ${file.path}`);
           
-          // Store the filename in the appropriate field
-          fileFields[fieldname] = file.filename;
+          try {
+            // Upload to Cloudinary
+            const cloudinaryResult = await uploadOnCloudinary(file.path);
+            
+            if (cloudinaryResult && cloudinaryResult.secure_url) {
+              console.log(`✅ Cloudinary upload successful: ${cloudinaryResult.secure_url}`);
+              fileFields[fieldname] = cloudinaryResult.secure_url;
+            } else {
+              console.log(`❌ Cloudinary upload failed for: ${fieldname}`);
+              fileFields[fieldname] = ""; // Set empty string if upload fails
+            }
+          } catch (uploadError) {
+            console.error(`❌ Error uploading ${fieldname} to Cloudinary:`, uploadError);
+            fileFields[fieldname] = ""; // Set empty string on error
+          }
         } else {
           console.log(`❌ No file found for: ${fieldname}`);
+          fileFields[fieldname] = "";
         }
       }
     }
 
-    // Build the member data object
+    // Build the member data object with Cloudinary URLs
     const memberData = {
       personalDetails: personalDetails || {},
       addressDetails: {
         ...addressDetails,
-        // Add file paths to address details
+        // Add Cloudinary URLs to address details
         permanentAddressBillPhoto: fileFields.permanentAddressBillPhoto || "",
         currentResidentalBillPhoto: fileFields.currentResidentalBillPhoto || ""
       },
@@ -56,7 +73,7 @@ export const createMember = async (req, res) => {
       guaranteeDetails: guaranteeDetails || {},
       documents: {
         ...documents,
-        // Add document file paths
+        // Add document Cloudinary URLs
         passportSize: fileFields.passportSize || "",
         panNoPhoto: fileFields.panNoPhoto || "",
         aadhaarNoPhoto: fileFields.aadhaarNoPhoto || "",
