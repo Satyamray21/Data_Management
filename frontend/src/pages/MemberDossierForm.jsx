@@ -1,11 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   Box,
   Card,
   CardContent,
   Container,
   Button,
-  Fade
+  Fade,
+  Snackbar,
+  Alert,
+  Typography
 } from "@mui/material";
 import {
   ArrowForward as ArrowForwardIcon,
@@ -21,11 +24,17 @@ import IdentityVerificationForm from "../components/form/IdentityVerificationFor
 import ProfessionalFamilyForm from "../components/form/ProfessionalFamilyForm";
 import BankGuaranteeForm from "../components/form/BankGuaranteeForm";
 import RemarksForm from "../components/form/RemarksForm";
+import { useDispatch, useSelector } from "react-redux";
+import { createMember, clearMemberState } from "../features/member/memberSlice";
 
 const MemberDossierForm = () => {
   const [activeStep, setActiveStep] = useState(0);
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
+  const dispatch = useDispatch();
+  
+  const { loading, successMessage, error, operationLoading } = useSelector((state) => state.members);
+
   const [formData, setFormData] = useState({
-    initialValues:{
     personalInformation: {
       nameOfMember: "",
       membershipNumber: "",
@@ -40,8 +49,8 @@ const MemberDossierForm = () => {
       maritalStatus: "",
       caste: "",
       phoneNo: "",
-      alternatePhoneNo:"",
-      emailId:"",
+      alternatePhoneNo: "",
+      emailId: "",
     },
     Address: {
       permanentAddress: {
@@ -129,7 +138,6 @@ const MemberDossierForm = () => {
         loanDate: "",
       },
     ],
-  }
   });
 
   const steps = [
@@ -141,7 +149,10 @@ const MemberDossierForm = () => {
     { label: "Remarks", icon: "📝" }
   ];
 
-  const handleChange = (section, field, value) => {
+  // Enhanced handleChange with debugging
+  const handleChange = useCallback((section, field, value) => {
+    console.log(`🔄 Updating ${section}.${field} to:`, value);
+    
     setFormData((prev) => ({
       ...prev,
       [section]: {
@@ -149,7 +160,23 @@ const MemberDossierForm = () => {
         [field]: value,
       },
     }));
-  };
+  }, []);
+
+  // NEW: Deep nested handleChange for address fields
+  const handleNestedChange = useCallback((section, subSection, field, value) => {
+    console.log(`🔄 Updating ${section}.${subSection}.${field} to:`, value);
+    
+    setFormData((prev) => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [subSection]: {
+          ...prev[section][subSection],
+          [field]: value,
+        },
+      },
+    }));
+  }, []);
 
   const handleNext = () => {
     setActiveStep((prev) => prev + 1);
@@ -159,16 +186,200 @@ const MemberDossierForm = () => {
     setActiveStep((prev) => prev - 1);
   };
 
-  const handleSubmit = (e) => {
+  const showSnackbar = useCallback((message, severity = "success") => {
+    setSnackbar({ open: true, message, severity });
+  }, []);
+
+  const handleCloseSnackbar = useCallback(() => {
+    setSnackbar(prev => ({ ...prev, open: false }));
+    dispatch(clearMemberState());
+  }, [dispatch]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form Data Submitted:", formData);
-    alert("Form submitted! Check console for JSON data.");
+
+    // Debug: Log current form data
+    console.log("📋 Current Form Data:", JSON.stringify(formData, null, 2));
+
+    try {
+      const formDataToSend = new FormData();
+      
+      const values = formData;
+
+      // --- PERSONAL INFORMATION ---
+      Object.entries(values.personalInformation || {}).forEach(([key, value]) => {
+        if (value !== null && value !== undefined && value !== "") {
+          formDataToSend.append(`personalDetails[${key}]`, value.toString());
+          console.log(`✅ Added personalDetails[${key}]:`, value);
+        }
+      });
+
+      // --- ADDRESS DETAILS ---
+      // Permanent Address
+      Object.entries(values.Address?.permanentAddress || {}).forEach(([key, value]) => {
+        if (key !== 'proofDocument' && value !== null && value !== undefined && value !== "") {
+          formDataToSend.append(`addressDetails[permanentAddress][${key}]`, value.toString());
+          console.log(`✅ Added addressDetails[permanentAddress][${key}]:`, value);
+        }
+      });
+
+      // Current Residential Address
+      Object.entries(values.Address?.currentResidentialAddress || {}).forEach(([key, value]) => {
+        if (key !== 'proofDocument' && value !== null && value !== undefined && value !== "") {
+          formDataToSend.append(`addressDetails[currentResidentalAddress][${key}]`, value.toString());
+          console.log(`✅ Added addressDetails[currentResidentalAddress][${key}]:`, value);
+        }
+      });
+
+      // Address Proof Files
+      if (values.Address?.permanentAddress?.proofDocument instanceof File) {
+        formDataToSend.append('permanentAddressBillPhoto', values.Address.permanentAddress.proofDocument);
+        console.log("✅ Added permanentAddressBillPhoto file");
+      }
+      if (values.Address?.currentResidentialAddress?.proofDocument instanceof File) {
+        formDataToSend.append('currentResidentalBillPhoto', values.Address.currentResidentialAddress.proofDocument);
+        console.log("✅ Added currentResidentalBillPhoto file");
+      }
+
+      // --- IDENTITY PROOFS (Documents) ---
+      const idProofs = values.identityProofs || {};
+      
+      // Document numbers
+      if (idProofs.panNumber) {
+        formDataToSend.append('documents[panNo]', idProofs.panNumber);
+        console.log("✅ Added documents[panNo]:", idProofs.panNumber);
+      }
+      if (idProofs.aadhaarCardNumber) {
+        formDataToSend.append('documents[aadhaarNo]', idProofs.aadhaarCardNumber);
+        console.log("✅ Added documents[aadhaarNo]:", idProofs.aadhaarCardNumber);
+      }
+      if (idProofs.rationCardNumber) {
+        formDataToSend.append('documents[rationCard]', idProofs.rationCardNumber);
+      }
+      if (idProofs.drivingLicenseNumber) {
+        formDataToSend.append('documents[drivingLicense]', idProofs.drivingLicenseNumber);
+      }
+      if (idProofs.voterIdNumber) {
+        formDataToSend.append('documents[voterId]', idProofs.voterIdNumber);
+      }
+      if (idProofs.passportNumber) {
+        formDataToSend.append('documents[passportNo]', idProofs.passportNumber);
+      }
+
+      // Document photos
+      if (idProofs.passportSizePhoto instanceof File) {
+        formDataToSend.append('passportSize', idProofs.passportSizePhoto);
+        console.log("✅ Added passportSize file");
+      }
+      if (idProofs.panCardPhoto instanceof File) {
+        formDataToSend.append('panNoPhoto', idProofs.panCardPhoto);
+      }
+      if (idProofs.aadhaarFrontPhoto instanceof File) {
+        formDataToSend.append('aadhaarNoPhoto', idProofs.aadhaarFrontPhoto);
+      }
+      if (idProofs.rationFrontPhoto instanceof File) {
+        formDataToSend.append('rationCardPhoto', idProofs.rationFrontPhoto);
+      }
+      if (idProofs.drivingFrontPhoto instanceof File) {
+        formDataToSend.append('drivingLicensePhoto', idProofs.drivingFrontPhoto);
+      }
+      if (idProofs.voterFrontPhoto instanceof File) {
+        formDataToSend.append('voterIdPhoto', idProofs.voterFrontPhoto);
+      }
+      if (idProofs.passportPhoto instanceof File) {
+        formDataToSend.append('passportNoPhoto', idProofs.passportPhoto);
+      }
+
+      // --- PROFESSIONAL DETAILS ---
+      Object.entries(values.professionalDetails || {}).forEach(([key, value]) => {
+        if (key !== 'familyMemberMemberOfSociety' && key !== 'familyMembers' && value !== null && value !== undefined && value !== "") {
+          formDataToSend.append(`professionalDetails[${key}]`, value.toString());
+        }
+      });
+
+      // --- FAMILY DETAILS ---
+      if (values.professionalDetails?.familyMemberMemberOfSociety) {
+        formDataToSend.append('familyDetails[familyMembersMemberOfSociety]', 'true');
+        
+        values.professionalDetails.familyMembers?.forEach((member, index) => {
+          if (member.name) formDataToSend.append(`familyDetails[familyMember][${index}]`, member.name);
+          if (member.membershipNo) formDataToSend.append(`familyDetails[familyMemberNo][${index}]`, member.membershipNo);
+        });
+      } else {
+        formDataToSend.append('familyDetails[familyMembersMemberOfSociety]', 'false');
+      }
+
+      // --- BANK DETAILS ---
+      (values.bankDetails || []).forEach((bank, index) => {
+        Object.entries(bank || {}).forEach(([key, value]) => {
+          if (value !== null && value !== undefined && value !== "") {
+            formDataToSend.append(`bankDetails[${key}]`, value.toString());
+          }
+        });
+      });
+
+      // --- LOAN DETAILS ---
+      (values.remarks || []).forEach((remark, index) => {
+        formDataToSend.append(`loanDetails[${index}][loanType]`, "Personal");
+        if (remark.loanAmount) formDataToSend.append(`loanDetails[${index}][amount]`, remark.loanAmount);
+        if (remark.purposeOfLoan) formDataToSend.append(`loanDetails[${index}][purpose]`, remark.purposeOfLoan);
+        if (remark.loanDate) formDataToSend.append(`loanDetails[${index}][dateOfLoan]`, remark.loanDate);
+      });
+
+      // --- REFERENCE DETAILS ---
+      formDataToSend.append('referenceDetails[referenceName]', "");
+      formDataToSend.append('referenceDetails[referenceMno]', "");
+      formDataToSend.append('referenceDetails[guarantorName]', "");
+      
+      // --- GUARANTEE DETAILS ---
+      formDataToSend.append('guaranteeDetails[whetherMemberHasGivenGuaranteeInOtherSociety]', 'false');
+      formDataToSend.append('guaranteeDetails[whetherMemberHasGivenGuaranteeInOurSociety]', 'false');
+
+      // --- DEBUG LOGS ---
+      console.log("🟡 Final FormData entries:");
+      let hasData = false;
+      for (const pair of formDataToSend.entries()) {
+        console.log(pair[0], ":", pair[1]);
+        if (pair[1] && pair[1] !== "") {
+          hasData = true;
+        }
+      }
+
+      if (!hasData) {
+        showSnackbar("No form data to submit. Please fill in the form.", "error");
+        return;
+      }
+
+      console.log("🚀 Dispatching createMember thunk...");
+      await dispatch(createMember(formDataToSend)).unwrap();
+      console.log("✅ Thunk dispatched successfully");
+
+      showSnackbar("✅ Member created successfully!", "success");
+      
+      // Reset form after successful submission
+      setActiveStep(0);
+      
+    } catch (err) {
+      console.error("❌ Failed to create member:", err);
+      showSnackbar(`Error: ${err.message || "Failed to create member"}`, "error");
+    }
   };
+
+  // Show success/error messages from Redux state
+  React.useEffect(() => {
+    if (successMessage) {
+      setSnackbar({ open: true, message: successMessage, severity: "success" });
+    }
+    if (error) {
+      setSnackbar({ open: true, message: error.message || "An error occurred", severity: "error" });
+    }
+  }, [successMessage, error]);
 
   const renderStepContent = (step) => {
     const commonProps = {
       formData,
-      handleChange
+      handleChange,
+      handleNestedChange
     };
 
     switch (step) {
@@ -188,6 +399,8 @@ const MemberDossierForm = () => {
         return null;
     }
   };
+
+  const isSubmitting = operationLoading?.create || loading;
 
   return (
     <Box sx={{
@@ -224,7 +437,7 @@ const MemberDossierForm = () => {
                 variant="outlined"
                 startIcon={<ArrowBackIcon />}
                 onClick={handleBack}
-                disabled={activeStep === 0}
+                disabled={activeStep === 0 || isSubmitting}
                 sx={{
                   px: 4,
                   py: 1.5,
@@ -245,6 +458,7 @@ const MemberDossierForm = () => {
                   variant="contained"
                   endIcon={<ArrowForwardIcon />}
                   onClick={handleSubmit}
+                  disabled={isSubmitting}
                   sx={{
                     px: 6,
                     py: 1.5,
@@ -255,16 +469,17 @@ const MemberDossierForm = () => {
                       transform: 'translateY(-2px)',
                       boxShadow: '0 6px 20px rgba(16, 185, 129, 0.4)'
                     },
-                    transition: 'all 0.3s ease'
+                    transition: 'all 0.3s ease',
                   }}
                 >
-                  Submit
+                  {isSubmitting ? "Submitting..." : "Submit"}
                 </Button>
               ) : (
                 <Button
                   variant="contained"
                   endIcon={<ArrowForwardIcon />}
                   onClick={handleNext}
+                  disabled={isSubmitting}
                   sx={{
                     px: 6,
                     py: 1.5,
@@ -284,6 +499,22 @@ const MemberDossierForm = () => {
             </Box>
           </CardContent>
         </Card>
+
+        {/* Snackbar for notifications */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={handleCloseSnackbar}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert 
+            onClose={handleCloseSnackbar} 
+            severity={snackbar.severity} 
+            sx={{ width: '100%' }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </Container>
     </Box>
   );
