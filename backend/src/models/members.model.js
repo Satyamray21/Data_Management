@@ -23,9 +23,29 @@ const memberSchema = new mongoose.Schema(
 
     // ===== ADDRESS DETAILS =====
     addressDetails: {
-      permanentAddress: { type: String },
+      permanentAddress: {
+  flatHouseNo: { type: String },
+  areaStreetSector: { type: String },
+  locality: { type: String },
+  landmark: { type: String },
+  city: { type: String },
+  country: { type: String },
+  state: { type: String },
+  pincode: { type: String },
+},
+
       permanentAddressBillPhoto: { type: String },
-      currentResidentalAddress: { type: String },
+      currentResidentalAddress:  {
+  flatHouseNo: { type: String },
+  areaStreetSector: { type: String },
+  locality: { type: String },
+  landmark: { type: String },
+  city: { type: String },
+  country: { type: String },
+  state: { type: String },
+  pincode: { type: String },
+},
+ 
       currentResidentalBillPhoto: [{ type: String }],
       previousCurrentAddress: [{ type: String }],
     },
