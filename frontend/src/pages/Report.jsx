@@ -12,131 +12,192 @@ import {
     TextField,
     InputAdornment,
     Button,
-    FormGroup,
-    FormControlLabel,
-    Checkbox,
+    MenuItem,
+    Select,
+    FormControl,
+    InputLabel,
+    Chip,
+    Stack,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-import { Formik, Form, Field } from "formik";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { Formik, Form } from "formik";
 
 const MissingMembersTable = () => {
     const members = [
-        { memberNo: "M001", name: "Aarav Sharma", aadhaarNumber: "1234-5678-9012", panNumber: "ABCDE1234F", address: "Delhi", phone: "9999999999" },
-        { memberNo: "M002", name: "Riya Gupta", aadhaarNumber: "", panNumber: "", address: "", phone: "8888888888" },
-        { memberNo: "M003", name: "Karan Mehta", aadhaarNumber: "5678-9012-3456", panNumber: "", address: "Mumbai", phone: "" },
-        { memberNo: "M004", name: "Priya Singh", aadhaarNumber: "9876-5432-1000", panNumber: "XYZAB6789C", address: "Pune", phone: "7777777777" },
-        { memberNo: "M005", name: "Rahul Verma", aadhaarNumber: "", panNumber: "", address: "Bangalore", phone: "6666666666" },
+        {
+            memberNo: "M001",
+            name: "Aarav Sharma",
+            aadhaarNumber: "1234-5678-9012",
+            panNumber: "ABCDE1234F",
+            address: "Delhi",
+            phone: "9999999999",
+        },
+        {
+            memberNo: "M002",
+            name: "Riya Gupta",
+            aadhaarNumber: "",
+            panNumber: "",
+            address: "",
+            phone: "8888888888",
+        },
+        {
+            memberNo: "M003",
+            name: "Karan Mehta",
+            aadhaarNumber: "5678-9012-3456",
+            panNumber: "",
+            address: "Mumbai",
+            phone: "",
+        },
+        {
+            memberNo: "M004",
+            name: "Priya Singh",
+            aadhaarNumber: "9876-5432-1000",
+            panNumber: "XYZAB6789C",
+            address: "Pune",
+            phone: "7777777777",
+        },
+        {
+            memberNo: "M005",
+            name: "Rahul Verma",
+            aadhaarNumber: "",
+            panNumber: "",
+            address: "Bangalore",
+            phone: "6666666666",
+        },
     ];
 
-    // ✅ PDF Generator Function
-    const generateSimplePDF = (filteredMembers, selectedFields) => {
-        try {
-            const doc = new jsPDF();
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(16);
-            doc.text("Members Missing Details", 14, 15);
-
-            doc.setFont("helvetica", "normal");
-            doc.setFontSize(10);
-            doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 22);
-            doc.text(`Total Members: ${filteredMembers.length}`, 14, 28);
-
-            const fieldLabels = {
-                aadhaarNumber: "Aadhar",
-                panNumber: "PAN Card",
-                address: "Address",
-                phone: "Phone",
-                passportNumber: "Passport Number"
-            };
-
-            // Dynamic PDF table
-            const tableHead = ["Member No", "Name", ...selectedFields.map(f => fieldLabels[f])];
-            const tableData = filteredMembers.map(m => [
-                m.memberNo,
-                m.name,
-                ...selectedFields.map(f => m[f] || "Missing")
-            ]);
-
-            autoTable(doc, {
-                startY: 40,
-                head: [tableHead],
-                body: tableData,
-                styles: { fontSize: 9 },
-                headStyles: { fillColor: [25, 118, 210], textColor: 255, fontStyle: "bold" },
-            });
-
-            // Smart filename
-            const fileName = `Missing_${selectedFields.map(f => fieldLabels[f].replace(/\s+/g, "")).join("_")}_Members.pdf`;
-            doc.save(fileName);
-        } catch (error) {
-            console.error("Error generating PDF:", error);
-            alert("Error generating PDF. Please try again.");
-        }
+    const fieldLabels = {
+        aadhaarNumber: "Aadhar Card",
+        panNumber: "PAN Card",
+        address: "Address",
+        phone: "Phone Number",
     };
 
-    const defaultFields = ["aadhaarNumber", "panNumber", "address", "phone", "passportNumber"];
+    // 📄 PDF Generator
+    const generatePDF = (filteredMembers, visibleFields, viewType) => {
+        const doc = new jsPDF();
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(16);
+        doc.text("Members Details Report", 14, 15);
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 22);
+        doc.text(`View Type: ${viewType}`, 14, 28);
+        doc.text(`Total Members: ${filteredMembers.length}`, 14, 34);
+
+        const tableHead = [
+            "Member No",
+            "Name",
+            ...visibleFields.map((f) => fieldLabels[f]),
+        ];
+
+        const tableData = filteredMembers.map((m) => [
+            m.memberNo,
+            m.name,
+            ...visibleFields.map((f) => m[f] || "Missing"),
+        ]);
+
+        autoTable(doc, {
+            startY: 42,
+            head: [tableHead],
+            body: tableData,
+            styles: { fontSize: 9 },
+            headStyles: { fillColor: [25, 118, 210], textColor: 255 },
+        });
+
+        doc.save(`Members_${viewType}_${Date.now()}.pdf`);
+    };
 
     return (
         <Box sx={{ p: 4 }}>
-            <Typography variant="h5" sx={{ fontWeight: "bold", color: "#1976d2", mb: 2 }}>
-                Members Missing Details
+            <Typography
+                variant="h5"
+                sx={{ fontWeight: "bold", color: "#1976d2", mb: 2 }}
+            >
+                Members Information Overview
             </Typography>
 
             <Formik
                 initialValues={{
                     search: "",
-                    missingFields: defaultFields,
+                    viewType: "all",
+                    showFields: [],
                 }}
                 onSubmit={() => { }}
             >
                 {({ values, setFieldValue }) => {
-                    // Filter members missing selected fields
-                    const missingMembers = useMemo(() => {
-                        return members.filter((m) =>
-                            values.missingFields.some((field) => !m[field]?.trim())
-                        );
-                    }, [members, values.missingFields]);
-
-                    // Search filter
                     const filteredMembers = useMemo(() => {
-                        const q = values.search.toLowerCase();
-                        return missingMembers.filter(
-                            (member) =>
-                                member.name.toLowerCase().includes(q) ||
-                                member.memberNo.toLowerCase().includes(q)
-                        );
-                    }, [missingMembers, values.search]);
+                        let result = members;
+                        const dataFields = Object.keys(fieldLabels);
 
-                    const handleCheckboxChange = (field) => {
-                        const updated = values.missingFields.includes(field)
-                            ? values.missingFields.filter((f) => f !== field)
-                            : [...values.missingFields, field];
-                        setFieldValue("missingFields", updated);
-                    };
+                        // ✅ Filter by missing or filled
+                        if (values.viewType === "missing") {
+                            result = members.filter((m) =>
+                                dataFields.some((f) => !m[f]?.trim())
+                            );
+                        } else if (values.viewType === "filled") {
+                            result = members.filter((m) =>
+                                dataFields.every((f) => m[f]?.trim())
+                            );
+                        }
 
-                    const fieldLabels = {
-                        aadhaarNumber: "Aadhar",
-                        panNumber: "PAN Card",
-                        address: "Address",
-                        phone: "Phone",
-                        passportNumber: "Passport Number"
-                    };
+                        // ✅ Search filter
+                        const q = values.search.toLowerCase().trim();
+                        if (q) {
+                            result = result.filter(
+                                (m) =>
+                                    m.name.toLowerCase().includes(q) ||
+                                    m.memberNo.toLowerCase().includes(q)
+                            );
+                        }
+
+                        return result;
+                    }, [values.search, values.viewType]);
+
+                    // ✅ FIXED: Show fields based on user selection or view type
+                    const visibleFields = useMemo(() => {
+                        // If user has selected specific fields, always respect that
+                        if (values.showFields.length > 0) {
+                            return values.showFields;
+                        }
+
+                        // If no fields selected, show appropriate fields based on view type
+                        if (values.viewType === "missing") {
+                            // For missing view, show all fields that have missing data in the entire dataset
+                            return Object.keys(fieldLabels).filter((field) =>
+                                members.some((m) => !m[field]?.trim())
+                            );
+                        } else {
+                            // For "all" and "filled" views, show all fields
+                            return Object.keys(fieldLabels);
+                        }
+                    }, [values.viewType, values.showFields]);
 
                     return (
                         <Form>
-                            {/* 🔍 Search and PDF Download */}
-                            <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mb: 3 }}>
-                                <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", alignItems: "center" }}>
-                                    <Field
-                                        as={TextField}
-                                        name="search"
+                            <Stack spacing={2} sx={{ mb: 3 }}>
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        flexWrap: "wrap",
+                                        gap: 2,
+                                        alignItems: "center",
+                                    }}
+                                >
+                                    {/* 🔍 Search */}
+                                    <TextField
                                         variant="outlined"
                                         placeholder="Search by Member No or Name"
                                         size="small"
-                                        sx={{ width: "100%", maxWidth: 400 }}
+                                        value={values.search}
+                                        onChange={(e) =>
+                                            setFieldValue("search", e.target.value)
+                                        }
+                                        sx={{ width: "100%", maxWidth: 250 }}
                                         InputProps={{
                                             startAdornment: (
                                                 <InputAdornment position="start">
@@ -146,110 +207,184 @@ const MissingMembersTable = () => {
                                         }}
                                     />
 
+                                    {/* 🔄 View Type */}
+                                    <FormControl size="small" sx={{ minWidth: 180 }}>
+                                        <InputLabel>View Type</InputLabel>
+                                        <Select
+                                            value={values.viewType}
+                                            onChange={(e) =>
+                                                setFieldValue("viewType", e.target.value)
+                                            }
+                                        >
+                                            <MenuItem value="all">All Members</MenuItem>
+                                            <MenuItem value="missing">
+                                                Missing Fields
+                                            </MenuItem>
+                                            <MenuItem value="filled">
+                                                Filled Fields
+                                            </MenuItem>
+                                        </Select>
+                                    </FormControl>
+
+                                    {/* 🧾 Show Fields - NOW ENABLED in all views */}
+                                    <FormControl
+                                        size="small"
+                                        sx={{ minWidth: 220 }}
+                                    >
+                                        <InputLabel>Show Fields</InputLabel>
+                                        <Select
+                                            multiple
+                                            value={values.showFields}
+                                            onChange={(e) =>
+                                                setFieldValue("showFields", e.target.value)
+                                            }
+                                            renderValue={(selected) => (
+                                                <Box
+                                                    sx={{
+                                                        display: "flex",
+                                                        flexWrap: "wrap",
+                                                        gap: 0.5,
+                                                    }}
+                                                >
+                                                    {selected.map((value) => (
+                                                        <Chip
+                                                            key={value}
+                                                            label={fieldLabels[value]}
+                                                            size="small"
+                                                        />
+                                                    ))}
+                                                    {selected.length === 0 && (
+                                                        <Chip
+                                                            label={
+                                                                values.viewType === "missing"
+                                                                    ? "Auto (Missing Fields)"
+                                                                    : "All Fields"
+                                                            }
+                                                            variant="outlined"
+                                                            size="small"
+                                                        />
+                                                    )}
+                                                </Box>
+                                            )}
+                                        >
+                                            {Object.entries(fieldLabels).map(
+                                                ([key, label]) => (
+                                                    <MenuItem key={key} value={key}>
+                                                        {label}
+                                                    </MenuItem>
+                                                )
+                                            )}
+                                        </Select>
+                                    </FormControl>
+
+                                    {/* 📄 PDF Download */}
                                     <Button
                                         variant="contained"
                                         color="error"
                                         startIcon={<PictureAsPdfIcon />}
                                         disabled={filteredMembers.length === 0}
-                                        onClick={() => generateSimplePDF(filteredMembers, values.missingFields)} // ✅ Fixed
+                                        onClick={() =>
+                                            generatePDF(
+                                                filteredMembers,
+                                                visibleFields,
+                                                values.viewType
+                                            )
+                                        }
                                     >
                                         Download PDF
                                     </Button>
                                 </Box>
+                            </Stack>
 
-                                {/* ✅ Missing Fields Selection */}
-                                <FormGroup row sx={{ flexWrap: "wrap" }}>
-                                    {Object.entries(fieldLabels).map(([key, label]) => (
-                                        <FormControlLabel
-                                            key={key}
-                                            control={
-                                                <Checkbox
-                                                    checked={values.missingFields.includes(key)}
-                                                    onChange={() => handleCheckboxChange(key)}
-                                                />
-                                            }
-                                            label={label}
-                                        />
-                                    ))}
-                                </FormGroup>
-                            </Box>
-
-                            {/* 📊 Summary */}
-                            <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
-                                Showing {filteredMembers.length} of {missingMembers.length} members with missing details
+                            {/* Summary */}
+                            <Typography
+                                variant="body2"
+                                sx={{ mb: 2, color: "text.secondary" }}
+                            >
+                                Showing {filteredMembers.length} members ({values.viewType} view)
+                                {values.viewType === "missing" && values.showFields.length === 0 &&
+                                    ` - Showing ${visibleFields.length} fields with missing data`
+                                }
+                                {values.showFields.length > 0 &&
+                                    ` - Showing ${values.showFields.length} selected fields`
+                                }
                             </Typography>
 
-                            {/* 🧾 Dynamic Table */}
+                            {/* Table */}
                             {filteredMembers.length === 0 ? (
                                 <Typography
-                                    color={missingMembers.length === 0 ? "green" : "text.secondary"}
-                                    sx={{ mt: 2, p: 2, textAlign: "center" }}
+                                    sx={{
+                                        mt: 2,
+                                        p: 2,
+                                        textAlign: "center",
+                                        color: "error.main",
+                                    }}
                                 >
-                                    {missingMembers.length === 0
-                                        ? "✅ All members have complete details!"
-                                        : "No members found matching your search."}
+                                    No members found matching your criteria.
                                 </Typography>
                             ) : (
-                                <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 3 }}>
+                                <TableContainer
+                                    component={Paper}
+                                    sx={{ borderRadius: 2, boxShadow: 3 }}
+                                >
                                     <Table>
                                         <TableHead sx={{ backgroundColor: "#1976d2" }}>
                                             <TableRow>
-                                                <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Member No</TableCell>
-                                                <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Name</TableCell>
-                                                {values.missingFields.includes("aadhaarNumber") && (
-                                                    <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Aadhar</TableCell>
-                                                )}
-                                                {values.missingFields.includes("panNumber") && (
-                                                    <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>PAN Card</TableCell>
-                                                )}
-                                                {values.missingFields.includes("address") && (
-                                                    <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Address</TableCell>
-                                                )}
-                                                {values.missingFields.includes("phone") && (
-                                                    <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Phone</TableCell>
-                                                )}
-                                                {values.missingFields.includes("passportNumber") && (
-                                                    <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Passport Number</TableCell>
-                                                )}
+                                                <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>
+                                                    Member No
+                                                </TableCell>
+                                                <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>
+                                                    Name
+                                                </TableCell>
+                                                {visibleFields.map((field) => (
+                                                    <TableCell
+                                                        key={field}
+                                                        sx={{ color: "#fff", fontWeight: "bold" }}
+                                                    >
+                                                        {fieldLabels[field]}
+                                                    </TableCell>
+                                                ))}
                                             </TableRow>
                                         </TableHead>
+
                                         <TableBody>
-                                            {filteredMembers.map((member, index) => (
+                                            {filteredMembers.map((m, i) => (
                                                 <TableRow
-                                                    key={index}
+                                                    key={i}
                                                     sx={{
-                                                        "&:nth-of-type(odd)": { backgroundColor: "#fafafa" },
-                                                        "&:hover": { backgroundColor: "#f5f5f5" },
+                                                        "&:nth-of-type(odd)": {
+                                                            backgroundColor: "#fafafa",
+                                                        },
+                                                        "&:hover": {
+                                                            backgroundColor: "#f5f5f5",
+                                                        },
                                                     }}
                                                 >
-                                                    <TableCell sx={{ fontWeight: "bold" }}>{member.memberNo}</TableCell>
-                                                    <TableCell>{member.name}</TableCell>
+                                                    <TableCell sx={{ fontWeight: "bold" }}>
+                                                        {m.memberNo}
+                                                    </TableCell>
+                                                    <TableCell>{m.name}</TableCell>
+                                                    {visibleFields.map((field) => {
+                                                        const isMissing = !m[field]?.trim();
 
-                                                    {values.missingFields.includes("aadhaarNumber") && (
-                                                        <TableCell sx={{ color: !member.aadhaarNumber ? "red" : "inherit" }}>
-                                                            {member.aadhaarNumber || "Missing"}
-                                                        </TableCell>
-                                                    )}
-                                                    {values.missingFields.includes("panNumber") && (
-                                                        <TableCell sx={{ color: !member.panNumber ? "red" : "inherit" }}>
-                                                            {member.panNumber || "Missing"}
-                                                        </TableCell>
-                                                    )}
-                                                    {values.missingFields.includes("address") && (
-                                                        <TableCell sx={{ color: !member.address ? "red" : "inherit" }}>
-                                                            {member.address || "Missing"}
-                                                        </TableCell>
-                                                    )}
-                                                    {values.missingFields.includes("phone") && (
-                                                        <TableCell sx={{ color: !member.phone ? "red" : "inherit" }}>
-                                                            {member.phone || "Missing"}
-                                                        </TableCell>
-                                                    )}
-                                                    {values.missingFields.includes("passportNumber") && (
-                                                        <TableCell sx={{ color: !member.passportNumber ? "red" : "inherit" }}>
-                                                            {member.passportNumber || "Missing"}
-                                                        </TableCell>
-                                                    )}
+                                                        // In missing view, only show data for fields that are actually missing
+                                                        // In other views, show all data
+                                                        const shouldShowData = values.viewType !== "missing" || isMissing;
+
+                                                        return (
+                                                            <TableCell
+                                                                key={field}
+                                                                sx={{
+                                                                    color: isMissing ? "red" : "green",
+                                                                    fontWeight: isMissing ? "bold" : "normal",
+                                                                    backgroundColor: isMissing ? "#ffebee" :
+                                                                        (values.viewType === "missing" ? "#f9f9f9" : "#e8f5e9"),
+                                                                }}
+                                                            >
+                                                                {shouldShowData ? (m[field] || "Missing") : ""}
+                                                            </TableCell>
+                                                        );
+                                                    })}
                                                 </TableRow>
                                             ))}
                                         </TableBody>

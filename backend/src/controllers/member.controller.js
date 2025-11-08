@@ -200,3 +200,171 @@ export const deleteMember = async (req, res) => {
     });
   }
 };
+
+
+export const getMissingFieldsForMember = async (req, res) => {
+  try {
+    const { membershipNumber, nameOfMember } = req.query;
+
+    if (!membershipNumber && !nameOfMember) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide either membershipNumber or nameOfMember.",
+      });
+    }
+
+    const member = await Member.findOne({
+      $or: [
+        { "personalDetails.membershipNumber": membershipNumber },
+        { "personalDetails.nameOfMember": nameOfMember },
+      ],
+    }).lean();
+
+    if (!member) {
+      return res.status(404).json({
+        success: false,
+        message: "Member not found.",
+      });
+    }
+
+    // Template based on your schema
+    const schemaTemplate = {
+      personalDetails: {
+        nameOfMember: "",
+        membershipNumber: "",
+        nameOfFather: "",
+        nameOfMother: "",
+        dateOfBirth: "",
+        ageInYears: "",
+        membershipDate: "",
+        amountInCredit: "",
+        gender: "",
+        maritalStatus: "",
+        religion: "",
+        caste: "",
+        phoneNo: "",
+        alternatePhoneNo: "",
+        emailId: "",
+      },
+      addressDetails: {
+        permanentAddress: {
+          flatHouseNo: "",
+          areaStreetSector: "",
+          locality: "",
+          landmark: "",
+          city: "",
+          country: "",
+          state: "",
+          pincode: "",
+        },
+        permanentAddressBillPhoto: "",
+        currentResidentalAddress: {
+          flatHouseNo: "",
+          areaStreetSector: "",
+          locality: "",
+          landmark: "",
+          city: "",
+          country: "",
+          state: "",
+          pincode: "",
+        },
+        currentResidentalBillPhoto: "",
+        previousCurrentAddress: [],
+      },
+      referenceDetails: {
+        referenceName: "",
+        referenceMno: "",
+        guarantorName: "",
+        gurantorMno: [],
+      },
+      documents: {
+        passportSize: "",
+        panNo: "",
+        rationCard: "",
+        drivingLicense: "",
+        aadhaarNo: "",
+        voterId: "",
+        passportNo: "",
+        panNoPhoto: "",
+        rationCardPhoto: "",
+        drivingLicensePhoto: "",
+        aadhaarNoPhoto: "",
+        voterIdPhoto: "",
+        passportNoPhoto: "",
+      },
+      professionalDetails: {
+        qualification: "",
+        occupation: "",
+      },
+      familyDetails: {
+        familyMembersMemberOfSociety: false,
+        familyMember: [],
+        familyMemberNo: [],
+      },
+      bankDetails: {
+        bankName: "",
+        branch: "",
+        accountNumber: "",
+        ifscCode: "",
+      },
+      guaranteeDetails: {
+        whetherMemberHasGivenGuaranteeInOtherSociety: false,
+        otherSociety: [],
+        whetherMemberHasGivenGuaranteeInOurSociety: false,
+        ourSociety: [],
+      },
+      loanDetails: [],
+    };
+
+    // Recursive function for both flat + detailed results
+    const findMissingFields = (schemaObj, dataObj) => {
+      const missingFlat = [];
+      const missingDetailed = {};
+
+      for (const key in schemaObj) {
+        const schemaValue = schemaObj[key];
+        const dataValue = dataObj ? dataObj[key] : undefined;
+
+        if (dataValue === undefined || dataValue === null || dataValue === "") {
+          missingFlat.push(key);
+          missingDetailed[key] = schemaValue;
+        } else if (
+          typeof schemaValue === "object" &&
+          !Array.isArray(schemaValue)
+        ) {
+          const { flat, detailed } = findMissingFields(schemaValue, dataValue);
+          if (flat.length > 0) {
+            missingFlat.push(...flat.map((f) => `${key}.${f}`));
+            missingDetailed[key] = detailed;
+          }
+        }
+      }
+
+      return { flat: missingFlat, detailed: missingDetailed };
+    };
+
+    const { flat: missingFields, detailed: missingFieldsDetailed } =
+      findMissingFields(schemaTemplate, member);
+
+    res.status(200).json({
+      success: true,
+      message: "Missing fields retrieved successfully.",
+      member: {
+        nameOfMember: member.personalDetails?.nameOfMember || null,
+        membershipNumber: member.personalDetails?.membershipNumber || null,
+      },
+      totalMissing: missingFields.length,
+      missingFields,
+      missingFieldsDetailed,
+    });
+  } catch (error) {
+    console.error("❌ Error checking missing fields:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+

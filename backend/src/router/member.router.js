@@ -6,6 +6,7 @@ import {
   getAllMembers,
   updateMember,
   deleteMember,
+  getMissingFieldsForMember,
 } from "../controllers/member.controller.js";
 
 const router = express.Router();
@@ -33,10 +34,10 @@ const upload = multer({
 const fileFields = [
   { name: "passportSize", maxCount: 1 },
   { name: "panNoPhoto", maxCount: 1 },
-  { name: "aadhaarNoPhoto", maxCount: 1 },
-  { name: "rationCardPhoto", maxCount: 1 },
-  { name: "drivingLicensePhoto", maxCount: 1 },
-  { name: "voterIdPhoto", maxCount: 1 },
+  { name: "aadhaarNoPhoto", maxCount:2 },
+  { name: "rationCardPhoto", maxCount: 2 },
+  { name: "drivingLicensePhoto", maxCount: 2 },
+  { name: "voterIdPhoto", maxCount: 2 },
   { name: "passportNoPhoto", maxCount: 1 },
   { name: "permanentAddressBillPhoto", maxCount: 1 },
   { name: "currentResidentalBillPhoto", maxCount: 1 }
@@ -47,5 +48,5 @@ router.get("/", getAllMembers);
 router.get("/:id", getMemberById);
 router.put("/:id", upload.fields(fileFields), updateMember);
 router.delete("/:id", deleteMember);
-
+router.get("/check/missing-fields", getMissingFieldsForMember);
 export default router;
