@@ -8,6 +8,7 @@ import {
   deleteMember,
   getMissingFieldsForMember,
   addGuarantor,
+  getGuarantorRelationsByMember,
 } from "../controllers/member.controller.js";
 
 const router = express.Router();
@@ -47,6 +48,7 @@ const fileFields = [
 router.post("/", upload.fields(fileFields), createMember);
 router.get("/", getAllMembers);
 router.post("/add-guarantor", addGuarantor);
+router.get("/guarantor-relations", getGuarantorRelationsByMember);
 router.get("/:id", getMemberById);
 router.put("/:id", upload.fields(fileFields), updateMember);
 router.delete("/:id", deleteMember);

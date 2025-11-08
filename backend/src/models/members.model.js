@@ -49,13 +49,11 @@ const memberSchema = new mongoose.Schema(
     },
 
     // ===== REFERENCES & GUARANTORS =====
-    referenceDetails: {
+    referenceDetails:[ {
       referenceName: { type: String },
       referenceMno: { type: String },
-      guarantorName: { type: String },
-      gurantorMno: [{ type: String }],
     },
-
+  ],
     // ===== DOCUMENTS =====
     documents: {
       passportSize: { type: String },
