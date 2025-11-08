@@ -25,6 +25,7 @@ const Sidebar = () => {
         { label: "Amenities Booking", route: "/amenities", icon: <EventSeatIcon /> },
         { label: "Settings", route: "/settings", icon: <SettingsIcon /> },
         { label: "Greeting", route: "/greeting", icon: <EventSeatIcon /> },
+         { label: "Guarantor", route:"/guarantor", icon: <People />},
     ];
 
     return (

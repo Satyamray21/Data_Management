@@ -368,11 +368,12 @@ export const getMissingFieldsForMember = async (req, res) => {
 };
 
 
+
 export const addGuarantor = async (req, res) => {
   try {
-    const { membershipNumber, nameOfMember, guarantor } = req.body;
+    const { membershipNumber, nameOfMember, guarantors } = req.body;
 
-    // Validate required fields
+    // === 1️⃣ Basic validations ===
     if (!membershipNumber && !nameOfMember) {
       return res.status(400).json({
         success: false,
@@ -380,56 +381,95 @@ export const addGuarantor = async (req, res) => {
       });
     }
 
-    if (
-      !guarantor ||
-      !guarantor.nameOfMember ||
-      !guarantor.membershipNo ||
-      !guarantor.amountOfLoan
-    ) {
+    if (!Array.isArray(guarantors) || guarantors.length === 0) {
       return res.status(400).json({
         success: false,
-        message:
-          "Guarantor details are incomplete. Required: nameOfMember, membershipNo, amountOfLoan.",
+        message: "Please provide at least one guarantor in an array.",
       });
     }
 
-    // Find the member
-    const member = await Member.findOne({
+    // === 2️⃣ Find the borrower ===
+    const borrower = await Member.findOne({
       $or: [
         { "personalDetails.membershipNumber": membershipNumber },
         { "personalDetails.nameOfMember": nameOfMember },
       ],
     });
 
-    if (!member) {
+    if (!borrower) {
       return res.status(404).json({
         success: false,
-        message: "Member not found.",
+        message: "Borrower member not found.",
       });
     }
 
-    // Initialize the array if empty
-    if (!member.guaranteeDetails) member.guaranteeDetails = {};
-    if (!Array.isArray(member.guaranteeDetails.ourSociety))
-      member.guaranteeDetails.ourSociety = [];
+    // Ensure borrower.guaranteeDetails is ready
+    if (!borrower.guaranteeDetails) borrower.guaranteeDetails = {};
+    if (!Array.isArray(borrower.guaranteeDetails.ourSociety))
+      borrower.guaranteeDetails.ourSociety = [];
 
-    // Push new guarantor
-    member.guaranteeDetails.ourSociety.push(guarantor);
+    // === 3️⃣ Loop through guarantors ===
+    for (const guarantor of guarantors) {
+      const { nameOfMember, membershipNo, amountOfLoan, typeOfLoan, ifIrregular } = guarantor;
 
-    // Save updated member
-    await member.save();
+      // Validate fields
+      if (!nameOfMember || !membershipNo || !amountOfLoan) continue;
 
+      // Find guarantor member
+      const guarantorMember = await Member.findOne({
+        "personalDetails.membershipNumber": membershipNo,
+      });
+
+      if (!guarantorMember) {
+        console.warn(`⚠️ Guarantor with membershipNo ${membershipNo} not found — skipped.`);
+        continue;
+      }
+
+      // === Update Borrower’s record ===
+      borrower.guaranteeDetails.ourSociety.push({
+        nameOfMember,
+        membershipNo,
+        amountOfLoan,
+        typeOfLoan: typeOfLoan || "",
+        ifIrregular: ifIrregular || "",
+      });
+
+      borrower.guaranteeDetails.whetherMemberHasGivenGuaranteeInOurSociety = true;
+
+      // === Update Guarantor’s record (reverse link) ===
+      if (!guarantorMember.guaranteeDetails)
+        guarantorMember.guaranteeDetails = {};
+      if (!Array.isArray(guarantorMember.guaranteeDetails.ourSociety))
+        guarantorMember.guaranteeDetails.ourSociety = [];
+
+      guarantorMember.guaranteeDetails.ourSociety.push({
+        nameOfMember: borrower.personalDetails.nameOfMember,
+        membershipNo: borrower.personalDetails.membershipNumber,
+        amountOfLoan,
+        typeOfLoan: typeOfLoan || "",
+        ifIrregular: ifIrregular || "",
+      });
+
+      guarantorMember.guaranteeDetails.whetherMemberHasGivenGuaranteeInOurSociety = true;
+
+      await guarantorMember.save();
+    }
+
+    // === 4️⃣ Save Borrower ===
+    await borrower.save();
+
+    // === 5️⃣ Respond ===
     res.status(200).json({
       success: true,
-      message: "Guarantor added successfully.",
-      updatedMember: {
-        nameOfMember: member.personalDetails.nameOfMember,
-        membershipNumber: member.personalDetails.membershipNumber,
-        guaranteeDetails: member.guaranteeDetails,
+      message: "Guarantors added successfully.",
+      borrower: {
+        nameOfMember: borrower.personalDetails.nameOfMember,
+        membershipNumber: borrower.personalDetails.membershipNumber,
+        guaranteeDetails: borrower.guaranteeDetails,
       },
     });
   } catch (error) {
-    console.error("❌ Error adding guarantor:", error);
+    console.error("❌ Error adding guarantors:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -437,4 +477,5 @@ export const addGuarantor = async (req, res) => {
     });
   }
 };
+
 

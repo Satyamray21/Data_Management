@@ -1,6 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "../../utils/axios";
 
+/* ===========================================================
+   ✅ CREATE MEMBER
+   =========================================================== */
 export const createMember = createAsyncThunk(
   "members/createMember",
   async (formData, { rejectWithValue }) => {
@@ -15,9 +18,9 @@ export const createMember = createAsyncThunk(
   }
 );
 
-/**
- * Fetch all members
- */
+/* ===========================================================
+   ✅ FETCH ALL MEMBERS
+   =========================================================== */
 export const fetchAllMembers = createAsyncThunk(
   "members/fetchAllMembers",
   async (_, { rejectWithValue }) => {
@@ -30,9 +33,9 @@ export const fetchAllMembers = createAsyncThunk(
   }
 );
 
-/**
- * Fetch single member by ID
- */
+/* ===========================================================
+   ✅ FETCH SINGLE MEMBER BY ID
+   =========================================================== */
 export const fetchMemberById = createAsyncThunk(
   "members/fetchMemberById",
   async (id, { rejectWithValue }) => {
@@ -45,9 +48,9 @@ export const fetchMemberById = createAsyncThunk(
   }
 );
 
-/**
- * Update member by ID (with form data)
- */
+/* ===========================================================
+   ✅ UPDATE MEMBER
+   =========================================================== */
 export const updateMember = createAsyncThunk(
   "members/updateMember",
   async ({ id, formData }, { rejectWithValue }) => {
@@ -62,9 +65,9 @@ export const updateMember = createAsyncThunk(
   }
 );
 
-/**
- * Delete member by ID
- */
+/* ===========================================================
+   ✅ DELETE MEMBER
+   =========================================================== */
 export const deleteMember = createAsyncThunk(
   "members/deleteMember",
   async (id, { rejectWithValue }) => {
@@ -77,10 +80,26 @@ export const deleteMember = createAsyncThunk(
   }
 );
 
-/* ==========================================================
-   ====================   SLICE SETUP   =====================
-   ========================================================== */
+/* ===========================================================
+   ✅ ADD GUARANTOR TO MEMBER
+   =========================================================== */
+export const addGuarantor = createAsyncThunk(
+  "members/addGuarantor",
+  async (payload, { rejectWithValue }) => {
+    try {
+      const response = await axios.post("/members/add-guarantor", payload);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || { message: "Failed to add guarantor." }
+      );
+    }
+  }
+);
 
+/* ===========================================================
+   ✅ SLICE SETUP
+   =========================================================== */
 const memberSlice = createSlice({
   name: "members",
   initialState: {
@@ -89,64 +108,59 @@ const memberSlice = createSlice({
     loading: false,
     error: null,
     successMessage: null,
-    // NEW: Add operation-specific loading states
+    // Operation-specific loading flags
     operationLoading: {
       create: false,
       update: false,
       delete: false,
-      fetch: false
-    }
+      fetch: false,
+      guarantor: false,
+    },
   },
   reducers: {
     clearMemberState: (state) => {
       state.error = null;
       state.successMessage = null;
       state.loading = false;
-      // Reset operation loading states
       state.operationLoading = {
         create: false,
         update: false,
         delete: false,
-        fetch: false
+        fetch: false,
+        guarantor: false,
       };
     },
-    // NEW: Clear selected member when needed
     clearSelectedMember: (state) => {
       state.selectedMember = null;
     },
-    // NEW: Clear error specifically
     clearError: (state) => {
       state.error = null;
     },
-    // NEW: Clear success message specifically
     clearSuccessMessage: (state) => {
       state.successMessage = null;
-    }
+    },
   },
   extraReducers: (builder) => {
     builder
-      // CREATE MEMBER
+      /* ======================== CREATE MEMBER ======================== */
       .addCase(createMember.pending, (state) => {
         state.loading = true;
         state.operationLoading.create = true;
-        state.error = null; // Clear previous errors
+        state.error = null;
       })
       .addCase(createMember.fulfilled, (state, action) => {
         state.loading = false;
         state.operationLoading.create = false;
-        // FIX: Use unshift instead of push to show newest members first
         state.members.unshift(action.payload);
         state.successMessage = "Member created successfully";
-        state.error = null;
       })
       .addCase(createMember.rejected, (state, action) => {
         state.loading = false;
         state.operationLoading.create = false;
         state.error = action.payload;
-        state.successMessage = null;
       })
 
-      // FETCH ALL MEMBERS
+      /* ======================== FETCH ALL MEMBERS ======================== */
       .addCase(fetchAllMembers.pending, (state) => {
         state.loading = true;
         state.operationLoading.fetch = true;
@@ -156,7 +170,6 @@ const memberSlice = createSlice({
         state.loading = false;
         state.operationLoading.fetch = false;
         state.members = action.payload;
-        state.error = null;
       })
       .addCase(fetchAllMembers.rejected, (state, action) => {
         state.loading = false;
@@ -164,7 +177,7 @@ const memberSlice = createSlice({
         state.error = action.payload;
       })
 
-      // FETCH MEMBER BY ID
+      /* ======================== FETCH MEMBER BY ID ======================== */
       .addCase(fetchMemberById.pending, (state) => {
         state.loading = true;
         state.operationLoading.fetch = true;
@@ -174,7 +187,6 @@ const memberSlice = createSlice({
         state.loading = false;
         state.operationLoading.fetch = false;
         state.selectedMember = action.payload;
-        state.error = null;
       })
       .addCase(fetchMemberById.rejected, (state, action) => {
         state.loading = false;
@@ -182,7 +194,7 @@ const memberSlice = createSlice({
         state.error = action.payload;
       })
 
-      // UPDATE MEMBER
+      /* ======================== UPDATE MEMBER ======================== */
       .addCase(updateMember.pending, (state) => {
         state.loading = true;
         state.operationLoading.update = true;
@@ -197,21 +209,18 @@ const memberSlice = createSlice({
         if (index !== -1) {
           state.members[index] = action.payload;
         }
-        // Also update selectedMember if it's the same member
         if (state.selectedMember && state.selectedMember._id === action.payload._id) {
           state.selectedMember = action.payload;
         }
         state.successMessage = "Member updated successfully";
-        state.error = null;
       })
       .addCase(updateMember.rejected, (state, action) => {
         state.loading = false;
         state.operationLoading.update = false;
         state.error = action.payload;
-        state.successMessage = null;
       })
 
-      // DELETE MEMBER
+      /* ======================== DELETE MEMBER ======================== */
       .addCase(deleteMember.pending, (state) => {
         state.loading = true;
         state.operationLoading.delete = true;
@@ -221,27 +230,43 @@ const memberSlice = createSlice({
         state.loading = false;
         state.operationLoading.delete = false;
         state.members = state.members.filter((m) => m._id !== action.payload);
-        // Clear selectedMember if it's the deleted member
         if (state.selectedMember && state.selectedMember._id === action.payload) {
           state.selectedMember = null;
         }
         state.successMessage = "Member deleted successfully";
-        state.error = null;
       })
       .addCase(deleteMember.rejected, (state, action) => {
         state.loading = false;
         state.operationLoading.delete = false;
         state.error = action.payload;
+      })
+
+      /* ======================== ADD GUARANTOR ======================== */
+      .addCase(addGuarantor.pending, (state) => {
+        state.operationLoading.guarantor = true;
+        state.error = null;
         state.successMessage = null;
+      })
+      .addCase(addGuarantor.fulfilled, (state, action) => {
+        state.operationLoading.guarantor = false;
+        state.successMessage = action.payload.message || "Guarantor added successfully";
+        // Optional: update the member in state if it's selected
+        if (state.selectedMember && state.selectedMember.personalDetails?.membershipNumber === action.payload.updatedMember?.membershipNumber) {
+          state.selectedMember.guaranteeDetails = action.payload.updatedMember.guaranteeDetails;
+        }
+      })
+      .addCase(addGuarantor.rejected, (state, action) => {
+        state.operationLoading.guarantor = false;
+        state.error = action.payload?.message || "Failed to add guarantor.";
       });
   },
 });
 
-export const { 
-  clearMemberState, 
-  clearSelectedMember, 
-  clearError, 
-  clearSuccessMessage 
+export const {
+  clearMemberState,
+  clearSelectedMember,
+  clearError,
+  clearSuccessMessage,
 } = memberSlice.actions;
 
 export default memberSlice.reducer;
