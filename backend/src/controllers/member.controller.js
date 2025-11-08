@@ -452,11 +452,11 @@ export const addGuarantor = async (req, res) => {
 
       guarantorMember.guaranteeDetails.whetherMemberHasGivenGuaranteeInOurSociety = true;
 
-      await guarantorMember.save();
+      await guarantorMember.save({ validateBeforeSave: false });
     }
 
     // === 4️⃣ Save Borrower ===
-    await borrower.save();
+    await borrower.save({ validateBeforeSave: false });
 
     // === 5️⃣ Respond ===
     res.status(200).json({
