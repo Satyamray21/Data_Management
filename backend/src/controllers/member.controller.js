@@ -368,3 +368,73 @@ export const getMissingFieldsForMember = async (req, res) => {
 };
 
 
+export const addGuarantor = async (req, res) => {
+  try {
+    const { membershipNumber, nameOfMember, guarantor } = req.body;
+
+    // Validate required fields
+    if (!membershipNumber && !nameOfMember) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide either membershipNumber or nameOfMember.",
+      });
+    }
+
+    if (
+      !guarantor ||
+      !guarantor.nameOfMember ||
+      !guarantor.membershipNo ||
+      !guarantor.amountOfLoan
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Guarantor details are incomplete. Required: nameOfMember, membershipNo, amountOfLoan.",
+      });
+    }
+
+    // Find the member
+    const member = await Member.findOne({
+      $or: [
+        { "personalDetails.membershipNumber": membershipNumber },
+        { "personalDetails.nameOfMember": nameOfMember },
+      ],
+    });
+
+    if (!member) {
+      return res.status(404).json({
+        success: false,
+        message: "Member not found.",
+      });
+    }
+
+    // Initialize the array if empty
+    if (!member.guaranteeDetails) member.guaranteeDetails = {};
+    if (!Array.isArray(member.guaranteeDetails.ourSociety))
+      member.guaranteeDetails.ourSociety = [];
+
+    // Push new guarantor
+    member.guaranteeDetails.ourSociety.push(guarantor);
+
+    // Save updated member
+    await member.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Guarantor added successfully.",
+      updatedMember: {
+        nameOfMember: member.personalDetails.nameOfMember,
+        membershipNumber: member.personalDetails.membershipNumber,
+        guaranteeDetails: member.guaranteeDetails,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error adding guarantor:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
