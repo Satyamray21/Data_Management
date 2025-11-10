@@ -20,7 +20,7 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
   // Auto-calculate age when date of birth changes
   const handleDateOfBirthChange = (dateString) => {
     handleFieldChange('dateOfBirth', dateString);
-    
+
     if (dateString) {
       const dob = new Date(dateString);
       const today = new Date();
@@ -51,7 +51,7 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
 
         <Grid container spacing={3}>
           {/* Name of Member */}
-          <Grid size={{xs:6, sm:6, md:3}}>
+          <Grid size={{ xs: 6, sm: 6, md: 3 }}>
             <StyledTextField
               label="Name of Member"
               name="nameOfMember"
@@ -61,7 +61,7 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
           </Grid>
 
           {/* Name of Father */}
-          <Grid size={{xs:6, sm:6, md:3}}>
+          <Grid size={{ xs: 6, sm: 6, md: 3 }}>
             <StyledTextField
               label="Name of Father"
               name="nameOfFather"
@@ -71,7 +71,7 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
           </Grid>
 
           {/* Name of Mother */}
-          <Grid size={{xs:6, sm:6, md:3}}>
+          <Grid size={{ xs: 6, sm: 6, md: 3 }}>
             <StyledTextField
               label="Name of Mother"
               name="nameOfMother"
@@ -81,7 +81,7 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
           </Grid>
 
           {/* Date of Birth */}
-          <Grid size={{xs:6, sm:6, md:3}}>
+          <Grid size={{ xs: 6, sm: 6, md: 3 }}>
             <StyledTextField
               label="Date of Birth"
               type="date"
@@ -93,7 +93,7 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
           </Grid>
 
           {/* Age in Years (auto-calculated) */}
-          <Grid size={{xs:6, sm:6, md:3}}>
+          <Grid size={{ xs: 6, sm: 6, md: 3 }}>
             <StyledTextField
               label="Age in Years"
               name="ageInYears"
@@ -103,7 +103,7 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
           </Grid>
 
           {/* Gender */}
-          <Grid size={{xs:6, sm:6, md:2}}>
+          <Grid size={{ xs: 6, sm: 6, md: 2 }}>
             <StyledTextField
               select
               label="Gender"
@@ -119,7 +119,7 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
           </Grid>
 
           {/* Religion */}
-          <Grid size={{xs:6, sm:6, md:2}}>
+          <Grid size={{ xs: 6, sm: 6, md: 2 }}>
             <StyledTextField
               select
               label="Religion"
@@ -139,7 +139,7 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
           </Grid>
 
           {/* Marital Status */}
-          <Grid size={{xs:6, sm:6, md:2}}>
+          <Grid size={{ xs: 6, sm: 6, md: 2 }}>
             <StyledTextField
               select
               label="Marital Status"
@@ -156,7 +156,7 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
           </Grid>
 
           {/* Caste */}
-          <Grid size={{xs:6, sm:6, md:3}}>
+          <Grid size={{ xs: 6, sm: 6, md: 3 }}>
             <StyledTextField
               select
               label="Caste"
@@ -173,7 +173,7 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
           </Grid>
 
           {/* Membership Number */}
-          <Grid size={{xs:6, sm:6, md:3}}>
+          <Grid size={{ xs: 6, sm: 6, md: 3 }}>
             <StyledTextField
               label="Membership No."
               name="membershipNumber"
@@ -183,7 +183,7 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
           </Grid>
 
           {/* Membership Date */}
-          <Grid size={{xs:6, sm:6, md:3}}>
+          <Grid size={{ xs: 6, sm: 6, md: 3 }}>
             <StyledTextField
               label="Membership Date"
               type="date"
@@ -195,7 +195,7 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
           </Grid>
 
           {/* Amount in Credit */}
-          <Grid size={{xs:6, sm:6, md:3}}>
+          <Grid size={{ xs: 6, sm: 6, md: 3 }}>
             <StyledTextField
               label="Amount in Credit"
               type="number"
@@ -205,7 +205,7 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
             />
           </Grid>
 
-          <Grid size={{xs:6, sm:6, md:3}}>
+          <Grid size={{ xs: 6, sm: 6, md: 3 }}>
             <StyledTextField
               label="Phone Number"
               name="phoneNo"
@@ -213,8 +213,8 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
               onChange={(e) => handleFieldChange('phoneNo', e.target.value)}
             />
           </Grid>
-          
-          <Grid size={{xs:6, sm:6, md:3}}>
+
+          <Grid size={{ xs: 6, sm: 6, md: 3 }}>
             <StyledTextField
               label="Alternate Phone Number"
               name="alternatePhoneNo"
@@ -222,8 +222,8 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
               onChange={(e) => handleFieldChange('alternatePhoneNo', e.target.value)}
             />
           </Grid>
-          
-          <Grid size={{xs:6, sm:6, md:3}}>
+
+          <Grid size={{ xs: 6, sm: 6, md: 3 }}>
             <StyledTextField
               label="Email Id"
               name="emailId"

@@ -69,7 +69,7 @@ const IdentityVerificationForm = ({ formData, handleChange }) => {
             width: "100%",
             maxWidth: 220,
             height: 140,
-            objectFit: "contain", 
+            objectFit: "contain",
             borderRadius: 2,
             border: "2px solid #667eea",
             boxShadow: "0 4px 12px rgba(102,126,234,0.3)",

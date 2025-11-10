@@ -26,7 +26,7 @@ const BankGuaranteeForm = ({ formData, handleChange }) => {
       ...updatedBankDetails[index],
       [field]: value
     };
-   handleChange('bankDetails', null, updatedBankDetails);
+    handleChange('bankDetails', null, updatedBankDetails);
 
   };
 
@@ -36,14 +36,14 @@ const BankGuaranteeForm = ({ formData, handleChange }) => {
       ...bankDetails,
       { bankName: "", branch: "", accountNumber: "", ifscCode: "" }
     ];
-   handleChange('bankDetails', null, updatedBankDetails);
+    handleChange('bankDetails', null, updatedBankDetails);
 
   };
 
   // Remove bank detail
   const removeBankDetail = (index) => {
     const updatedBankDetails = bankDetails.filter((_, i) => i !== index);
-   handleChange('bankDetails', null, updatedBankDetails);
+    handleChange('bankDetails', null, updatedBankDetails);
 
   };
 

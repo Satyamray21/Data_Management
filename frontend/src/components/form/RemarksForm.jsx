@@ -25,7 +25,7 @@ const RemarksForm = ({ formData, handleChange }) => {
       ...updatedRemarks[index],
       [field]: value
     };
-    handleChange('remarks',null, updatedRemarks);
+    handleChange('remarks', null, updatedRemarks);
   };
 
   // Add new remark
@@ -34,13 +34,13 @@ const RemarksForm = ({ formData, handleChange }) => {
       ...remarks,
       { loanAmount: "", purposeOfLoan: "", loanDate: "" }
     ];
-    handleChange('remarks',null, updatedRemarks);
+    handleChange('remarks', null, updatedRemarks);
   };
 
   // Delete remark
   const deleteRemark = (index) => {
     const updatedRemarks = remarks.filter((_, i) => i !== index);
-    handleChange('remarks',null, updatedRemarks);
+    handleChange('remarks', null, updatedRemarks);
   };
 
   return (

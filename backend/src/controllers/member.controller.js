@@ -28,18 +28,18 @@ export const createMember = async (req, res) => {
 
     if (req.files) {
       console.log("📁 Processing files:", Object.keys(req.files));
-      
+
       // Handle each file field and upload to Cloudinary
       for (const [fieldname, files] of Object.entries(req.files)) {
         if (files && files[0]) {
           const file = files[0];
           console.log(`📄 Processing file: ${fieldname} - ${file.originalname}`);
           console.log(`📍 File path: ${file.path}`);
-          
+
           try {
             // Upload to Cloudinary
             const cloudinaryResult = await uploadOnCloudinary(file.path);
-            
+
             if (cloudinaryResult && cloudinaryResult.secure_url) {
               console.log(`✅ Cloudinary upload successful: ${cloudinaryResult.secure_url}`);
               fileFields[fieldname] = cloudinaryResult.secure_url;
@@ -152,31 +152,23 @@ export const getAllMembers = async (req, res) => {
 
 export const updateMember = async (req, res) => {
   try {
-    const updatedMember = await Member.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
-    if (!updatedMember) {
-      return res.status(404).json({
-        success: false,
-        message: "Member not found"
-      });
-    }
+    const member = await Member.findById(req.params.id);
+    if (!member) return res.status(404).json({ success: false, message: "Member not found" });
+
+    Object.assign(member, req.body);
+
+    await member.save(); // ✅ triggers pre('save')
+
     res.status(200).json({
       success: true,
       message: "Member updated successfully",
-      data: updatedMember
+      data: member,
     });
   } catch (error) {
-    console.error("Error updating member:", error);
-    res.status(500).json({
-      success: false,
-      message: "Internal server error",
-      error: error.message
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 export const deleteMember = async (req, res) => {
   try {
@@ -538,5 +530,4 @@ export const getGuarantorRelationsByMember = async (req, res) => {
     });
   }
 };
-
 

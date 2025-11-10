@@ -30,7 +30,7 @@ const AddressForm = ({ formData, handleChange, handleNestedChange }) => {
   const handleSameAddress = (e) => {
     const checked = e.target.checked;
     handleChange('Address', 'sameAsPermanent', checked);
-    
+
     if (checked) {
       // Copy current residential address to permanent address
       const currentAddress = { ...addressData.currentResidentialAddress };

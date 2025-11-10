@@ -21,12 +21,13 @@ const Sidebar = () => {
     const menuItems = [
         { label: "Dashboard", route: "/dashboard", icon: <DashboardIcon /> },
         { label: "Member", route: "/society", icon: <People /> },
-        { label: "Report", route: "/report", icon: <AssessmentIcon /> },
+        { label: "Member List", route: "/memberdetail", icon: <AdminPanelSettingsIcon /> },
+        { label: "Report", route: "/report", icon: <AssessmentIcon /> },
         { label: "Amenities Booking", route: "/amenities", icon: <EventSeatIcon /> },
         { label: "Settings", route: "/settings", icon: <SettingsIcon /> },
         { label: "Greeting", route: "/greeting", icon: <EventSeatIcon /> },
-         { label: "Guarantor", route:"/guarantor", icon: <People />},
-         { label: "Guarantor List", route:"/guarantorList", icon: <People />},
+        { label: "Guarantor", route: "/guarantor", icon: <People /> },
+        { label: "Guarantor List", route: "/guarantorList", icon: <People /> },
     ];
 
     return (
@@ -43,7 +44,7 @@ const Sidebar = () => {
                 variant="h6"
                 sx={{ fontWeight: 700, color: "#1a237e", mb: 2, textAlign: "center" }}
             >
-                mysociety
+                CA Co-Operative Socity
             </Typography>
             <Divider sx={{ mb: 2 }} />
             <List>

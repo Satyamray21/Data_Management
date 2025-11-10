@@ -15,7 +15,7 @@ const Header = () => (
         }}
     >
         <Typography variant="h6" fontWeight="bold">
-            Welcome to Patel Society
+            Welcome to CA Co-Operative Thrift & Credit Socity
         </Typography>
         <Box display="flex" alignItems="center" gap={1}>
             <Typography variant="body2">Hi, Raj Patel</Typography>

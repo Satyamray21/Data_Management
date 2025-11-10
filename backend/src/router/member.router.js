@@ -25,7 +25,7 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({ 
+const upload = multer({
   storage,
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit
@@ -36,7 +36,7 @@ const upload = multer({
 const fileFields = [
   { name: "passportSize", maxCount: 1 },
   { name: "panNoPhoto", maxCount: 1 },
-  { name: "aadhaarNoPhoto", maxCount:2 },
+  { name: "aadhaarNoPhoto", maxCount: 2 },
   { name: "rationCardPhoto", maxCount: 2 },
   { name: "drivingLicensePhoto", maxCount: 2 },
   { name: "voterIdPhoto", maxCount: 2 },

@@ -31,7 +31,7 @@ const MemberDossierForm = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
   const dispatch = useDispatch();
-  
+
   const { loading, successMessage, error, operationLoading } = useSelector((state) => state.members);
 
   const [formData, setFormData] = useState({
@@ -130,7 +130,7 @@ const MemberDossierForm = () => {
       accountNumber: "",
       ifscCode: "",
     }],
-    
+
     remarks: [
       {
         loanAmount: "",
@@ -150,29 +150,29 @@ const MemberDossierForm = () => {
   ];
 
   const handleChange = useCallback((section, field, value) => {
-  setFormData((prev) => {
-    if (section === 'bankDetails' || section === 'remarks') {
+    setFormData((prev) => {
+      if (section === 'bankDetails' || section === 'remarks') {
+        return {
+          ...prev,
+          [section]: value // Directly set the array value
+        };
+      }
+
       return {
         ...prev,
-        [section]: value // Directly set the array value
+        [section]: {
+          ...prev[section],
+          [field]: value,
+        },
       };
-    }
-
-    return {
-      ...prev,
-      [section]: {
-        ...prev[section],
-        [field]: value,
-      },
-    };
-  });
-}, []);
+    });
+  }, []);
 
 
   // NEW: Deep nested handleChange for address fields
   const handleNestedChange = useCallback((section, subSection, field, value) => {
     console.log(`🔄 Updating ${section}.${subSection}.${field} to:`, value);
-    
+
     setFormData((prev) => ({
       ...prev,
       [section]: {
@@ -210,7 +210,7 @@ const MemberDossierForm = () => {
 
     try {
       const formDataToSend = new FormData();
-      
+
       const values = formData;
 
       // --- PERSONAL INFORMATION ---
@@ -250,7 +250,7 @@ const MemberDossierForm = () => {
 
       // --- IDENTITY PROOFS (Documents) ---
       const idProofs = values.identityProofs || {};
-      
+
       // Document numbers
       if (idProofs.panNumber) {
         formDataToSend.append('documents[panNo]', idProofs.panNumber);
@@ -307,7 +307,7 @@ const MemberDossierForm = () => {
       // --- FAMILY DETAILS ---
       if (values.professionalDetails?.familyMemberMemberOfSociety) {
         formDataToSend.append('familyDetails[familyMembersMemberOfSociety]', 'true');
-        
+
         values.professionalDetails.familyMembers?.forEach((member, index) => {
           if (member.name) formDataToSend.append(`familyDetails[familyMember][${index}]`, member.name);
           if (member.membershipNo) formDataToSend.append(`familyDetails[familyMemberNo][${index}]`, member.membershipNo);
@@ -337,7 +337,7 @@ const MemberDossierForm = () => {
       formDataToSend.append('referenceDetails[referenceName]', "");
       formDataToSend.append('referenceDetails[referenceMno]', "");
       formDataToSend.append('referenceDetails[guarantorName]', "");
-      
+
       // --- GUARANTEE DETAILS ---
       formDataToSend.append('guaranteeDetails[whetherMemberHasGivenGuaranteeInOtherSociety]', 'false');
       formDataToSend.append('guaranteeDetails[whetherMemberHasGivenGuaranteeInOurSociety]', 'false');
@@ -362,10 +362,10 @@ const MemberDossierForm = () => {
       console.log("✅ Thunk dispatched successfully");
 
       showSnackbar("✅ Member created successfully!", "success");
-      
+
       // Reset form after successful submission
       setActiveStep(0);
-      
+
     } catch (err) {
       console.error("❌ Failed to create member:", err);
       showSnackbar(`Error: ${err.message || "Failed to create member"}`, "error");
@@ -514,9 +514,9 @@ const MemberDossierForm = () => {
           onClose={handleCloseSnackbar}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         >
-          <Alert 
-            onClose={handleCloseSnackbar} 
-            severity={snackbar.severity} 
+          <Alert
+            onClose={handleCloseSnackbar}
+            severity={snackbar.severity}
             sx={{ width: '100%' }}
           >
             {snackbar.message}

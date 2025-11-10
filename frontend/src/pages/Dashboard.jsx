@@ -17,16 +17,16 @@ const data = [
 const Dashboard = () => (
     <Box sx={{ p: 3 }}>
         <Grid container spacing={2}>
-            <Grid item xs={12} sm={3}>
+            <Grid size={{ xs: 12, md: 3 }}>
                 <StatCard label="Towers/Streets" value="20" color="#E3F2FD" icon={<ApartmentIcon />} />
             </Grid>
-            <Grid item xs={12} sm={3}>
+            <Grid size={{ xs: 12, md: 3 }}>
                 <StatCard label="Members" value="59" color="#FFF3E0" icon={<PeopleIcon />} />
             </Grid>
-            <Grid item xs={12} sm={3}>
+            <Grid size={{ xs: 12, md: 3 }}>
                 <StatCard label="Vehicles" value="47" color="#FFEBEE" icon={<DirectionsCarIcon />} />
             </Grid>
-            <Grid item xs={12} sm={3}>
+            <Grid size={{ xs: 12, md: 3 }}>
                 <StatCard label="Staffs" value="10" color="#E8F5E9" icon={<WorkIcon />} />
             </Grid>
         </Grid>
