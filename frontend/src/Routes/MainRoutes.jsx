@@ -6,6 +6,8 @@ import MemberDossierForm from '../pages/MemberDossierForm';
 import MissingMemberFilter from '../pages/Report'
 import FestivalGreetingPage from '../pages/Greeting'
 import GuarantorPage from '../pages/Guarantor/Guarantor';
+import GuarantorList from '../pages/GuarantorList/GuarantorList.jsx'
+
 const MainRoutes = () => {
   return (
     <Routes>
@@ -16,6 +18,7 @@ const MainRoutes = () => {
         <Route path="/report" element={<MissingMemberFilter />} />
         <Route path="/greeting" element={<FestivalGreetingPage />} />
         <Route path="/guarantor" element={<GuarantorPage />} />
+        <Route path="/guarantorList" element={<GuarantorList />} />
       </Route>
     </Routes>
 
