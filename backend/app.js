@@ -32,4 +32,7 @@ app.use(cookieParser());
 import memberRouter from "./src/router/member.router.js";
 app.use("/api/v1/members", memberRouter);
 
+import noticeRouter from "./src/router/notice.router.js";
+app.use("/api/v1/notice", noticeRouter);
+
 export { app }

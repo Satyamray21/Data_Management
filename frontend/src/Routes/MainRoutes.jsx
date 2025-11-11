@@ -10,7 +10,7 @@ import MemberPDF from '../components/MemberPDF';
 import GuarantorPage from '../pages/Guarantor/Guarantor';
 import MemberDetailsPage from '../pages/MemberDetail';
 import GuarantorList from '../pages/GuarantorList/GuarantorList.jsx'
-
+import NoticePage from '../pages/Notice/Notice.jsx'
 const MainRoutes = () => {
   return (
     <Routes>
@@ -25,6 +25,7 @@ const MainRoutes = () => {
         <Route path="/guarantor" element={<GuarantorPage />} />
         <Route path="/memberdetail" element={<MemberDetailsPage />} />
         <Route path="/guarantorList" element={<GuarantorList />} />
+         <Route path="/notice" element={<NoticePage />} />
       </Route>
     </Routes>
   )
