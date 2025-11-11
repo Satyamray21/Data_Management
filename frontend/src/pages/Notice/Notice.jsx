@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   Box,
   Card,
@@ -12,7 +12,6 @@ import {
   Stack,
   Snackbar,
   CircularProgress,
-  MenuItem,
 } from "@mui/material";
 import {
   Announcement as NoticeIcon,
@@ -40,12 +39,17 @@ const NoticePage = () => {
 
   const [snackOpen, setSnackOpen] = useState(false);
 
-  // 🔹 Load all members on mount (from database)
+  /* 🔹 Load all members on mount */
   useEffect(() => {
     dispatch(fetchAllMembers());
   }, [dispatch]);
 
-  // 🔹 Form setup
+  /* 🔹 Show snackbar when success/error occurs */
+  useEffect(() => {
+    if (success || error) setSnackOpen(true);
+  }, [success, error]);
+
+  /* 🔹 Formik setup */
   const formik = useFormik({
     initialValues: {
       selectedMembers: [],
@@ -55,19 +59,54 @@ const NoticePage = () => {
     onSubmit: async (values) => {
       const memberIds = values.selectedMembers.map((m) => m._id);
       const attachment = values.files[0] || null;
-      await dispatch(sendNoticeToMembers({ memberIds, subject: "Society Notice", message: values.note, attachment }));
-      setSnackOpen(true);
-      formik.resetForm();
+
+      const result = await dispatch(
+        sendNoticeToMembers({
+          memberIds,
+          subject: "Society Notice",
+          message: values.note,
+          attachment,
+        })
+      );
+
+      if (sendNoticeToMembers.fulfilled.match(result)) {
+        formik.resetForm();
+      }
     },
   });
 
+  /* 🔹 File upload validation */
   const handleFileChange = (e) => {
-    formik.setFieldValue("files", Array.from(e.target.files));
+    const files = Array.from(e.target.files);
+    const validFiles = files.filter(
+      (file) =>
+        file.size <= 5 * 1024 * 1024 && // max 5 MB
+        ["image/", "application/pdf"].some((type) =>
+          file.type.startsWith(type)
+        )
+    );
+
+    if (validFiles.length !== files.length) {
+      alert(
+        "Some files were too large or unsupported. Only PDFs and images under 5MB allowed."
+      );
+    }
+
+    formik.setFieldValue("files", validFiles);
   };
 
-  const availableMembers = members.filter(
-    (m) => !formik.values.selectedMembers.some((s) => s._id === m._id)
-  );
+  /* 🔹 Filter members efficiently */
+  const availableMembers = useMemo(() => {
+    return members.filter(
+      (m) => !formik.values.selectedMembers.some((s) => s._id === m._id)
+    );
+  }, [members, formik.values.selectedMembers]);
+
+  /* 🔹 Snackbar close handler */
+  const handleSnackClose = () => {
+    setSnackOpen(false);
+    dispatch(resetNoticeState());
+  };
 
   return (
     <Card
@@ -95,7 +134,9 @@ const NoticePage = () => {
               <Autocomplete
                 options={availableMembers}
                 getOptionLabel={(option) =>
-                  `${option.personalDetails?.nameOfMember || "Unnamed"} (${option.personalDetails?.membershipNumber})`
+                  `${option.personalDetails?.nameOfMember || "Unnamed"} (${
+                    option.personalDetails?.membershipNumber
+                  })`
                 }
                 onChange={(event, newValue) => {
                   if (newValue) {
@@ -117,13 +158,13 @@ const NoticePage = () => {
               />
             </Box>
 
-            {/* 🔸 Selected Members List */}
+            {/* 🔸 Selected Members */}
             {formik.values.selectedMembers.length > 0 && (
               <Box mt={2}>
                 <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
                   Selected Members:
                 </Typography>
-                <Stack direction="row" spacing={1} flexWrap="wrap">
+                <Stack direction="row" spacing={1.2} useFlexGap flexWrap="wrap">
                   {formik.values.selectedMembers.map((member) => (
                     <Chip
                       key={member._id}
@@ -148,11 +189,16 @@ const NoticePage = () => {
                     <Card
                       key={member._id}
                       variant="outlined"
-                      sx={{ p: 2, mt: 1, borderRadius: 2, background: "#f9f9f9" }}
+                      sx={{
+                        p: 2,
+                        mt: 1,
+                        borderRadius: 2,
+                        background: "#f9f9f9",
+                      }}
                     >
                       <Typography variant="body1">
-                        <strong>{member.personalDetails?.nameOfMember}</strong> (
-                        {member.personalDetails?.membershipNumber})
+                        <strong>{member.personalDetails?.nameOfMember}</strong>{" "}
+                        ({member.personalDetails?.membershipNumber})
                       </Typography>
                       <Typography variant="body2">
                         📞 {member.personalDetails?.phoneNo || "N/A"}
@@ -168,11 +214,14 @@ const NoticePage = () => {
 
             {/* 🔸 Message Input */}
             <Box mt={3}>
+              <Typography variant="subtitle1" gutterBottom>
+                Notice Message
+              </Typography>
               <TextField
                 multiline
                 rows={4}
                 name="note"
-                label="Notice Message"
+                label="Enter your message here"
                 value={formik.values.note}
                 onChange={formik.handleChange}
                 fullWidth
@@ -191,7 +240,12 @@ const NoticePage = () => {
                 startIcon={<UploadIcon />}
               >
                 Upload
-                <input type="file" hidden onChange={handleFileChange} />
+                <input
+                  type="file"
+                  hidden
+                  onChange={handleFileChange}
+                  multiple
+                />
               </Button>
               {formik.values.files.length > 0 && (
                 <Typography
@@ -204,7 +258,7 @@ const NoticePage = () => {
               )}
             </Box>
 
-            {/* 🔸 Submit Button */}
+            {/* 🔸 Submit Buttons */}
             <Box
               mt={4}
               display="flex"
@@ -214,19 +268,27 @@ const NoticePage = () => {
               flexWrap="wrap"
             >
               <Tooltip title="Send Notice">
-                <IconButton
-                  color="primary"
-                  type="submit"
-                  sx={{
-                    backgroundColor: "#1976d2",
-                    color: "white",
-                    p: 2,
-                    "&:hover": { backgroundColor: "#1565c0" },
-                  }}
-                  disabled={noticeLoading}
-                >
-                  {noticeLoading ? <CircularProgress size={24} color="inherit" /> : <ShareIcon />}
-                </IconButton>
+                <span>
+                  <IconButton
+                    color="primary"
+                    type="submit"
+                    sx={{
+                      backgroundColor: "#1976d2",
+                      color: "white",
+                      p: 2,
+                      "&:hover": { backgroundColor: "#1565c0" },
+                    }}
+                    disabled={
+                      noticeLoading || formik.values.selectedMembers.length === 0
+                    }
+                  >
+                    {noticeLoading ? (
+                      <CircularProgress size={24} color="inherit" />
+                    ) : (
+                      <ShareIcon />
+                    )}
+                  </IconButton>
+                </span>
               </Tooltip>
 
               {/* Quick WhatsApp Share */}
@@ -234,7 +296,9 @@ const NoticePage = () => {
                 variant="outlined"
                 color="success"
                 startIcon={<WhatsAppIcon />}
-                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(formik.values.note || "Notice")}`}
+                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
+                  formik.values.note || "Notice"
+                )}`}
                 target="_blank"
               >
                 WhatsApp
@@ -247,7 +311,7 @@ const NoticePage = () => {
         <Snackbar
           open={snackOpen}
           autoHideDuration={3000}
-          onClose={() => setSnackOpen(false)}
+          onClose={handleSnackClose}
           message={
             success
               ? message || "Notice sent successfully!"

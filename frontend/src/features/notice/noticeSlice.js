@@ -1,9 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "../../utils/axios";
 
-/* ============================================================
-   📨 SEND NOTICE TO MEMBERS
-   ============================================================ */
 export const sendNoticeToMembers = createAsyncThunk(
   "notice/sendNoticeToMembers",
   async ({ memberIds, subject, message, attachment }, { rejectWithValue }) => {
@@ -11,8 +8,8 @@ export const sendNoticeToMembers = createAsyncThunk(
       const formData = new FormData();
       formData.append("subject", subject);
       formData.append("message", message);
-      memberIds.forEach((id) => formData.append("memberIds[]", id)); // send array properly
-      if (attachment) formData.append("attachment", attachment);
+      formData.append("memberIds", JSON.stringify(memberIds));
+      if (attachment) formData.append("attachment", attachment); // ✅ fixed field name
 
       const { data } = await axios.post("/notice/send", formData, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -20,15 +17,13 @@ export const sendNoticeToMembers = createAsyncThunk(
 
       return data;
     } catch (err) {
-      const errorMsg = err.response?.data?.message || err.message;
-      return rejectWithValue(errorMsg);
+      return rejectWithValue(
+        err.response?.data?.message || "Something went wrong while sending the notice"
+      );
     }
   }
 );
 
-/* ============================================================
-   ⚙️ SLICE
-   ============================================================ */
 const noticeSlice = createSlice({
   name: "notice",
   initialState: {
@@ -36,6 +31,7 @@ const noticeSlice = createSlice({
     success: false,
     error: null,
     message: "",
+    response: null,
   },
   reducers: {
     resetNoticeState: (state) => {
@@ -43,6 +39,7 @@ const noticeSlice = createSlice({
       state.success = false;
       state.error = null;
       state.message = "";
+      state.response = null;
     },
   },
   extraReducers: (builder) => {
@@ -52,11 +49,13 @@ const noticeSlice = createSlice({
         state.error = null;
         state.success = false;
         state.message = "";
+        state.response = null;
       })
       .addCase(sendNoticeToMembers.fulfilled, (state, action) => {
         state.loading = false;
         state.success = true;
         state.message = action.payload.message;
+        state.response = action.payload;
       })
       .addCase(sendNoticeToMembers.rejected, (state, action) => {
         state.loading = false;
