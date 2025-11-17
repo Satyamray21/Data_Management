@@ -37,6 +37,8 @@ const MemberDossierForm = () => {
   const [formData, setFormData] = useState({
     personalInformation: {
       nameOfMember: "",
+      title:"",
+      minor:"",
       membershipNumber: "",
       nameOfFather: "",
       nameOfMother: "",
@@ -45,6 +47,7 @@ const MemberDossierForm = () => {
       membershipDate: "",
       amountInCredit: "",
       gender: "",
+      nameOfSpouse:"",
       religion: "",
       maritalStatus: "",
       caste: "",
