@@ -35,113 +35,127 @@ const MemberDossierForm = () => {
   const { loading, successMessage, error, operationLoading } = useSelector((state) => state.members);
 
   const [formData, setFormData] = useState({
-    personalInformation: {
-      nameOfMember: "",
-      title:"",
-      minor:"",
-      membershipNumber: "",
-      nameOfFather: "",
-      nameOfMother: "",
-      dateOfBirth: "",
-      ageInYears: "",
-      membershipDate: "",
-      amountInCredit: "",
-      gender: "",
-      nameOfSpouse:"",
-      religion: "",
-      maritalStatus: "",
-      caste: "",
-      phoneNo: "",
-      alternatePhoneNo: "",
-      emailId: "",
+  personalInformation: {
+    nameOfMember: "",
+    title: "",
+    minor: "",
+    membershipNumber: "",
+    nameOfFather: "",
+    nameOfMother: "",
+    dateOfBirth: "",
+    ageInYears: "",
+    membershipDate: "",
+    amountInCredit: "",
+    gender: "",
+    nameOfSpouse: "",
+    religion: "",
+    maritalStatus: "",
+    caste: "",
+    phoneNo: "",
+    alternatePhoneNo: "",
+    emailId: "",
+  },
+
+  Address: {
+    permanentAddress: {
+      flatHouseNo: "",
+      areaStreetSector: "",
+      locality: "",
+      landmark: "",
+      city: "",
+      country: "",
+      state: "",
+      pincode: "",
+      proofDocument: null,
     },
-    Address: {
-      permanentAddress: {
-        flatHouseNo: "",
-        areaStreetSector: "",
-        locality: "",
-        landmark: "",
-        city: "",
-        country: "",
-        state: "",
-        pincode: "",
-        proofDocument: null,
+    sameAsPermanent: false,
+    currentResidentialAddress: {
+      flatHouseNo: "",
+      areaStreetSector: "",
+      locality: "",
+      landmark: "",
+      city: "",
+      country: "",
+      state: "",
+      pincode: "",
+      proofDocument: null,
+    },
+  },
+
+  identityProofs: {
+    passportSizePhoto: null,
+    passportSizePreview: "",
+
+    panNumber: "",
+    panCardPhoto: null,
+    panCardPreview: "",
+
+    aadhaarCardNumber: "",
+    aadhaarFrontPhoto: null,
+    aadhaarBackPhoto: null,
+    aadhaarFrontPreview: "",
+    aadhaarBackPreview: "",
+
+    rationCardNumber: "",
+    rationFrontPhoto: null,
+    rationBackPhoto: null,
+    rationFrontPreview: "",
+    rationBackPreview: "",
+
+    drivingLicenseNumber: "",
+    drivingFrontPhoto: null,
+    drivingBackPhoto: null,
+    drivingFrontPreview: "",
+    drivingBackPreview: "",
+
+    voterIdNumber: "",
+    voterFrontPhoto: null,
+    voterBackPhoto: null,
+    voterFrontPreview: "",
+    voterBackPreview: "",
+
+    passportNumber: "",
+    passportPhoto: null,
+    passportPreview: "",
+  },
+
+  professionalDetails: {
+    qualification: "",
+    occupation: "",
+    familyMemberMemberOfSociety: false,
+    familyMembers: [
+      {
+        name: "",
+        membershipNo: "",
       },
-      sameAsPermanent: false,
-      currentResidentialAddress: {
-        flatHouseNo: "",
-        areaStreetSector: "",
-        locality: "",
-        landmark: "",
-        city: "",
-        country: "",
-        state: "",
-        pincode: "",
-        proofDocument: null,
-      },
-    },
-    identityProofs: {
-      passportSizePhoto: null,
-      passportSizePreview: "",
+    ],
+  },
 
-      panNumber: "",
-      panCardPhoto: null,
-      panCardPreview: "",
-
-      aadhaarCardNumber: "",
-      aadhaarFrontPhoto: null,
-      aadhaarBackPhoto: null,
-      aadhaarFrontPreview: "",
-      aadhaarBackPreview: "",
-
-      rationCardNumber: "",
-      rationFrontPhoto: null,
-      rationBackPhoto: null,
-      rationFrontPreview: "",
-      rationBackPreview: "",
-
-      drivingLicenseNumber: "",
-      drivingFrontPhoto: null,
-      drivingBackPhoto: null,
-      drivingFrontPreview: "",
-      drivingBackPreview: "",
-
-      voterIdNumber: "",
-      voterFrontPhoto: null,
-      voterBackPhoto: null,
-      voterFrontPreview: "",
-      voterBackPreview: "",
-
-      passportNumber: "",
-      passportPhoto: null,
-      passportPreview: "",
-    },
-    professionalDetails: {
-      qualification: "",
-      occupation: "",
-      familyMemberMemberOfSociety: false,
-      familyMembers: [
-        {
-          name: "",
-          membershipNo: "",
-        },
-      ],
-    },
-    bankDetails: [{
+  bankDetails: [
+    {
       bankName: "",
       branch: "",
       accountNumber: "",
       ifscCode: "",
-    }],
+    },
+  ],
 
-    remarks: [
-      {
-        loanAmount: "",
-        purposeOfLoan: "",
-        loanDate: "",
-      },
-    ],
-  });
+  nomineeDetails: {
+    nomineeName: "",
+    relationWithApplicant: "",
+    introduceBy: "",
+    memberShipNo: "",
+  },
+
+  remarks: [
+    {
+      loanAmount: "",
+      purposeOfLoan: "",
+      loanDate: "",
+    },
+  ],
+});
+
 
   const steps = [
     { label: "Personal Info", icon: "👤" },
@@ -152,24 +166,36 @@ const MemberDossierForm = () => {
     { label: "Remarks", icon: "📝" }
   ];
 
-  const handleChange = useCallback((section, field, value) => {
-    setFormData((prev) => {
-      if (section === 'bankDetails' || section === 'remarks') {
-        return {
-          ...prev,
-          [section]: value // Directly set the array value
-        };
-      }
+ const handleChange = useCallback((section, field, value) => {
+  setFormData((prev) => {
 
+    // When field === null → replace the entire object/array
+    if (field === null) {
       return {
         ...prev,
-        [section]: {
-          ...prev[section],
-          [field]: value,
-        },
+        [section]: value,
       };
-    });
-  }, []);
+    }
+
+    // Arrays like bankDetails and remarks handled directly
+    if (Array.isArray(prev[section])) {
+      return {
+        ...prev,
+        [section]: value,
+      };
+    }
+
+    // Normal nested object update
+    return {
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [field]: value,
+      },
+    };
+  });
+}, []);
+
 
 
   // NEW: Deep nested handleChange for address fields

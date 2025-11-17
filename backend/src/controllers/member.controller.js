@@ -57,6 +57,7 @@ export const createMember = async (req, res) => {
     const professionalDetails = safeParse(req.body.professionalDetails, {});
     const bankDetails = safeParse(req.body.bankDetails, {});
     const documents = safeParse(req.body.documents, {});
+    const nomineeDetails = safeParse(req.body.nomineeDetails, {});
 
     // Upload files (if any)
     const fileFields = {};
@@ -113,6 +114,7 @@ export const createMember = async (req, res) => {
       },
 
       bankDetails: bankDetails || {},
+      nomineeDetails: nomineeDetails || {},
     };
 
     console.log("✅ Final data to save (create):", JSON.stringify(memberData, null, 2));
