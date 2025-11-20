@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import pdcSchema from "./pdc.model.js";
+import {pdcSchema} from "./pdc.model.js";
 
 const loanSchema = new mongoose.Schema(
   {
@@ -64,7 +64,10 @@ const loanSchema = new mongoose.Schema(
       },
     },
 
-    pdcDetails: [pdcSchema],
+    pdcDetails: {
+      type: [pdcSchema],
+      default: [],
+    },
   },
   { timestamps: true }
 );

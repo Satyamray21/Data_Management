@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
     Box,
     Card,
@@ -13,6 +13,12 @@ import {
     IconButton,
     Tooltip,
     CircularProgress,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Button,
+    Chip,
 } from "@mui/material";
 import {
     VerifiedUser as GuarantorIcon,
@@ -34,6 +40,8 @@ const GuarantorList = () => {
     const { members, guarantorRelations, loading } = useSelector(
         (state) => state.members
     );
+    const [viewDialog, setViewDialog] = useState(false);
+    const [selectedGuarantor, setSelectedGuarantor] = useState(null);
 
     // ✅ Load all members initially
     useEffect(() => {
@@ -55,6 +63,17 @@ const GuarantorList = () => {
         }
     };
 
+    // View Guarantor Details
+    const handleViewGuarantor = (guarantor) => {
+        setSelectedGuarantor(guarantor);
+        setViewDialog(true);
+    };
+
+    const handleCloseDialog = () => {
+        setViewDialog(false);
+        setSelectedGuarantor(null);
+    };
+
     const selectedMember = formik.values.memberId;
     const selectedMemberData = members.find(
         (m) => m.personalDetails.membershipNumber === selectedMember
@@ -62,6 +81,11 @@ const GuarantorList = () => {
 
     const myGuarantors = guarantorRelations?.myGuarantors || [];
     const forWhomIAmGuarantor = guarantorRelations?.forWhomIAmGuarantor || [];
+
+    // Helper function to get membership number from guarantor object
+    const getMembershipNumber = (guarantor) => {
+        return guarantor.membershipNumber || guarantor.membershipNo || 'N/A';
+    };
 
     return (
         <Card
@@ -151,6 +175,9 @@ const GuarantorList = () => {
                                             S.No
                                         </TableCell>
                                         <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                                            Membership No.
+                                        </TableCell>
+                                        <TableCell sx={{ color: "white", fontWeight: "bold" }}>
                                             Name
                                         </TableCell>
                                         <TableCell sx={{ color: "white", fontWeight: "bold" }}>
@@ -159,15 +186,30 @@ const GuarantorList = () => {
                                         <TableCell sx={{ color: "white", fontWeight: "bold" }}>
                                             Type of Loan
                                         </TableCell>
+                                        <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                                            Actions
+                                        </TableCell>
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
                                     {forWhomIAmGuarantor.map((item, index) => (
                                         <TableRow key={index} hover>
                                             <TableCell>{index + 1}</TableCell>
+                                            <TableCell>{getMembershipNumber(item)}</TableCell>
                                             <TableCell>{item.name}</TableCell>
-                                            <TableCell>{item.amountOfLoan}</TableCell>
+                                            <TableCell>₹ {parseInt(item.amountOfLoan).toLocaleString()}</TableCell>
                                             <TableCell>{item.typeOfLoan}</TableCell>
+                                            <TableCell>
+                                                <Tooltip title="View Details">
+                                                    <IconButton
+                                                        color="primary"
+                                                        size="small"
+                                                        onClick={() => handleViewGuarantor(item)}
+                                                    >
+                                                        <ViewIcon />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            </TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
@@ -191,6 +233,9 @@ const GuarantorList = () => {
                                             S.No
                                         </TableCell>
                                         <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                                            Membership No.
+                                        </TableCell>
+                                        <TableCell sx={{ color: "white", fontWeight: "bold" }}>
                                             Name
                                         </TableCell>
                                         <TableCell sx={{ color: "white", fontWeight: "bold" }}>
@@ -199,15 +244,30 @@ const GuarantorList = () => {
                                         <TableCell sx={{ color: "white", fontWeight: "bold" }}>
                                             Type of Loan
                                         </TableCell>
+                                        <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                                            Actions
+                                        </TableCell>
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
                                     {myGuarantors.map((item, index) => (
                                         <TableRow key={index} hover>
                                             <TableCell>{index + 1}</TableCell>
+                                            <TableCell>{getMembershipNumber(item)}</TableCell>
                                             <TableCell>{item.name}</TableCell>
-                                            <TableCell>{item.amountOfLoan}</TableCell>
+                                            <TableCell>₹ {parseInt(item.amountOfLoan).toLocaleString()}</TableCell>
                                             <TableCell>{item.typeOfLoan}</TableCell>
+                                            <TableCell>
+                                                <Tooltip title="View Details">
+                                                    <IconButton
+                                                        color="primary"
+                                                        size="small"
+                                                        onClick={() => handleViewGuarantor(item)}
+                                                    >
+                                                        <ViewIcon />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            </TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
@@ -219,6 +279,81 @@ const GuarantorList = () => {
                         )}
                     </Box>
                 )}
+
+                {/* View Guarantor Details Dialog */}
+                <Dialog
+                    open={viewDialog}
+                    onClose={handleCloseDialog}
+                    maxWidth="sm"
+                    fullWidth
+                >
+                    <DialogTitle sx={{ bgcolor: "primary.main", color: "white" }}>
+                        Guarantor Details
+                    </DialogTitle>
+                    <DialogContent sx={{ mt: 2 }}>
+                        {selectedGuarantor && (
+                            <Box>
+                                <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
+                                    <Typography variant="h6" color="primary">
+                                        {selectedGuarantor.name}
+                                    </Typography>
+                                    <Chip
+                                        label={selectedGuarantor.ifIrregular === "Yes" ? "Irregular" : "Regular"}
+                                        color={selectedGuarantor.ifIrregular === "Yes" ? "error" : "success"}
+                                        size="small"
+                                    />
+                                </Box>
+
+                                <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
+                                    <Box>
+                                        <Typography variant="body2" color="text.secondary">
+                                            Membership Number
+                                        </Typography>
+                                        <Typography variant="body1" fontWeight="bold">
+                                            {getMembershipNumber(selectedGuarantor)}
+                                        </Typography>
+                                    </Box>
+
+                                    <Box>
+                                        <Typography variant="body2" color="text.secondary">
+                                            Loan Amount
+                                        </Typography>
+                                        <Typography variant="body1" fontWeight="bold" color="primary">
+                                            ₹ {parseInt(selectedGuarantor.amountOfLoan).toLocaleString()}
+                                        </Typography>
+                                    </Box>
+
+                                    <Box>
+                                        <Typography variant="body2" color="text.secondary">
+                                            Loan Type
+                                        </Typography>
+                                        <Typography variant="body1" fontWeight="bold">
+                                            {selectedGuarantor.typeOfLoan}
+                                        </Typography>
+                                    </Box>
+
+                                    <Box>
+                                        <Typography variant="body2" color="text.secondary">
+                                            Status
+                                        </Typography>
+                                        <Typography
+                                            variant="body1"
+                                            fontWeight="bold"
+                                            color={selectedGuarantor.ifIrregular === "Yes" ? "error" : "success"}
+                                        >
+                                            {selectedGuarantor.ifIrregular === "Yes" ? "Irregular" : "Regular"}
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                            </Box>
+                        )}
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={handleCloseDialog} color="primary">
+                            Close
+                        </Button>
+                    </DialogActions>
+                </Dialog>
             </CardContent>
         </Card>
     );
