@@ -35,4 +35,7 @@ app.use("/api/v1/members", memberRouter);
 import noticeRouter from "./src/router/notice.router.js";
 app.use("/api/v1/notice", noticeRouter);
 
+import loanRouter from "./src/router/loan.router.js";
+app.use("/api/v1/loans", loanRouter);
+
 export { app }

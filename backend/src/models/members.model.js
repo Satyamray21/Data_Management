@@ -6,12 +6,7 @@ const memberSchema = new mongoose.Schema(
     personalDetails: {
       title: { type: String },
       nameOfMember: { type: String },
-
-      // You mentioned this comment: “in gstCertificate it will hold image pdf anything”
-      // Already supported by type: String (Cloudinary URL)
-
       membershipNumber: { type: String },
-
       minor: {
         type: Boolean,
         default: false,
