@@ -76,12 +76,30 @@ export const createMember = async (req, res) => {
         ...personalDetails,
       },
 
-      addressDetails: {
-        ...addressDetails,
-        permanentAddressBillPhoto: fileFields.permanentAddressBillPhoto || addressDetails.permanentAddressBillPhoto || "",
-        currentResidentalBillPhoto: fileFields.currentResidentalBillPhoto || addressDetails.currentResidentalBillPhoto || "",
-        previousCurrentAddress: addressDetails.previousCurrentAddress || [],
-      },
+     addressDetails: {
+  ...addressDetails,
+
+  permanentAddressBillPhoto:
+    fileFields.permanentAddressBillPhoto ||
+    addressDetails.permanentAddressBillPhoto ||
+    "",
+
+  currentResidentalBillPhoto:
+    fileFields.currentResidentalBillPhoto ||
+    addressDetails.currentResidentalBillPhoto ||
+    "",
+
+  // NEW (MISSING EARLIER)
+  companyProvidedAddress: addressDetails.companyProvidedAddress || {},
+
+  companyProvidedAddressBillPhoto:
+    fileFields.companyProvidedAddressBillPhoto ||
+    addressDetails.companyProvidedAddressBillPhoto ||
+    "",
+
+  previousCurrentAddress: addressDetails.previousCurrentAddress || [],
+},
+
 
       familyDetails: familyDetails || {},
 
@@ -208,22 +226,31 @@ export const updateMember = async (req, res) => {
     if (incomingPersonalDetails) {
       member.personalDetails = { ...(member.personalDetails || {}), ...incomingPersonalDetails };
     }
-
     if (incomingAddressDetails) {
-      member.addressDetails = { ...(member.addressDetails || {}), ...incomingAddressDetails };
+  member.addressDetails = { ...(member.addressDetails || {}), ...incomingAddressDetails };
 
-      // merge photos if uploaded
-      if (fileFields.permanentAddressBillPhoto) member.addressDetails.permanentAddressBillPhoto = fileFields.permanentAddressBillPhoto;
-      if (fileFields.currentResidentalBillPhoto) member.addressDetails.currentResidentalBillPhoto = fileFields.currentResidentalBillPhoto;
-    } else {
-      // still allow replacing photos even if no address JSON provided
-      if (fileFields.permanentAddressBillPhoto) {
-        member.addressDetails = { ...(member.addressDetails || {}), permanentAddressBillPhoto: fileFields.permanentAddressBillPhoto };
-      }
-      if (fileFields.currentResidentalBillPhoto) {
-        member.addressDetails = { ...(member.addressDetails || {}), currentResidentalBillPhoto: fileFields.currentResidentalBillPhoto };
-      }
-    }
+  if (fileFields.permanentAddressBillPhoto)
+    member.addressDetails.permanentAddressBillPhoto = fileFields.permanentAddressBillPhoto;
+
+  if (fileFields.currentResidentalBillPhoto)
+    member.addressDetails.currentResidentalBillPhoto = fileFields.currentResidentalBillPhoto;
+
+  // NEW FIX
+  if (fileFields.companyProvidedAddressBillPhoto)
+    member.addressDetails.companyProvidedAddressBillPhoto = fileFields.companyProvidedAddressBillPhoto;
+
+} else {
+  if (fileFields.permanentAddressBillPhoto)
+    member.addressDetails.permanentAddressBillPhoto = fileFields.permanentAddressBillPhoto;
+
+  if (fileFields.currentResidentalBillPhoto)
+    member.addressDetails.currentResidentalBillPhoto = fileFields.currentResidentalBillPhoto;
+
+  // NEW FIX
+  if (fileFields.companyProvidedAddressBillPhoto)
+    member.addressDetails.companyProvidedAddressBillPhoto = fileFields.companyProvidedAddressBillPhoto;
+}
+
 
     if (incomingFamilyDetails) {
       member.familyDetails = { ...(member.familyDetails || {}), ...incomingFamilyDetails };

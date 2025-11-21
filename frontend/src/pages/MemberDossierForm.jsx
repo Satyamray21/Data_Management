@@ -294,7 +294,13 @@ const MemberDossierForm = () => {
           values.Address.currentResidentialAddress.proofDocument
         );
       }
+      if (values.Address?.companyProvidedAddress?.proofDocument instanceof File) {
+ formDataToSend.append(
+  "companyProvidedAddressBillPhoto",
+  values.Address.companyProvidedAddress.proofDocument
+);
 
+}
       /* -----------------------------------------
          DOCUMENTS (Identity Proofs)
       ----------------------------------------- */
