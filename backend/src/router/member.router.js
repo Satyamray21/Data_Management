@@ -42,7 +42,9 @@ const fileFields = [
   { name: "voterIdPhoto", maxCount: 2 },
   { name: "passportNoPhoto", maxCount: 1 },
   { name: "permanentAddressBillPhoto", maxCount: 1 },
-  { name: "currentResidentalBillPhoto", maxCount: 1 }
+  { name: "currentResidentalBillPhoto", maxCount: 1 },
+    { name: "companyProvidedAddressBillPhoto", maxCount: 1 },
+
 ];
 
 router.post("/", upload.fields(fileFields), createMember);

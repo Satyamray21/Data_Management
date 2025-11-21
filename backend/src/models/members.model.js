@@ -11,8 +11,22 @@ const memberSchema = new mongoose.Schema(
         type: Boolean,
         default: false,
       },
+      guardianName: {
+    type: String,
+    required: function () {
+      return this.minor === true;
+    },
+  },
 
+  guardianRelation: {
+    type: String,
+    required: function () {
+      return this.minor === true;
+    },
+  },
+      fatherTitle: { type: String },
       nameOfFather: { type: String },
+      motherTitle: { type: String },
       nameOfMother: { type: String },
       nameOfSpouse: { type: String },
       dateOfBirth: { type: Date },
@@ -30,6 +44,10 @@ const memberSchema = new mongoose.Schema(
 
     // ===== ADDRESS DETAILS =====
     addressDetails: {
+      residenceType:{
+        type: String,
+        enum:['Owned','Rented','Company Provided','Other'],
+      },
       permanentAddress: {
         flatHouseNo: { type: String },
         areaStreetSector: { type: String },
@@ -55,7 +73,17 @@ const memberSchema = new mongoose.Schema(
       },
 
       currentResidentalBillPhoto: { type: String },
-
+      companyProvidedAddress: {
+        flatHouseNo: { type: String },
+        areaStreetSector: { type: String },
+        locality: { type: String },
+        landmark: { type: String },
+        city: { type: String },
+        country: { type: String },
+        state: { type: String },
+        pincode: { type: String },
+      },
+      companyProvidedAddressBillPhoto: { type: String },
       previousCurrentAddress: [
         {
           flatHouseNo: String,
