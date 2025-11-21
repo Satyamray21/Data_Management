@@ -60,6 +60,7 @@ const MemberDossierForm = () => {
     },
 
     Address: {
+      residenceType: "",
       permanentAddress: {
         flatHouseNo: "",
         areaStreetSector: "",
