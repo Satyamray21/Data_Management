@@ -52,6 +52,7 @@ const FILE_FIELD_KEYS = {
   drivingLicensePhoto: "drivingLicensePhoto",
   voterIdPhoto: "voterIdPhoto",
   passportNoPhoto: "passportNoPhoto",
+  signedPhoto:"signedPhoto",
 
   gstCertificate:
     "professionalDetails[businessDetails][gstCertificate]",
@@ -123,6 +124,10 @@ export const createMember = async (req, res) => {
           uploadedFiles.voterIdPhoto || documents.voterIdPhoto || "",
         passportNoPhoto:
           uploadedFiles.passportNoPhoto || documents.passportNoPhoto || "",
+          signedPhoto:
+          uploadedFiles.signedPhoto || documents.signedPhoto || "",
+          
+        
       },
 
       familyDetails,
@@ -212,6 +217,7 @@ export const updateMember = async (req, res) => {
       "drivingLicensePhoto",
       "voterIdPhoto",
       "passportNoPhoto",
+      "signedPhoto",
     ];
 
     member.documents = member.documents || {};
@@ -383,6 +389,7 @@ export const getMissingFieldsForMember = async (req, res) => {
         aadhaarNoPhoto: "",
         voterIdPhoto: "",
         passportNoPhoto: "",
+        signedPhoto:"",
       },
       professionalDetails: {
         qualification: "",

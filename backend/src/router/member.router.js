@@ -45,6 +45,7 @@ const fileFields = [
   { name: "drivingLicensePhoto", maxCount: 1 },
   { name: "voterIdPhoto", maxCount: 1 },
   { name: "passportNoPhoto", maxCount: 1 },
+  { name: "signedPhoto", maxCount: 1 },
 
   // Business GST
   { name: "professionalDetails[businessDetails][gstCertificate]", maxCount: 1 },

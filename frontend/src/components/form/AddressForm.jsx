@@ -431,9 +431,9 @@ const AddressForm = ({ formData, handleChange, handleNestedChange }) => {
                 }}
               >
                 <MenuItem value="">Select Residence Type</MenuItem>
-                <MenuItem value="OWNED">Owned</MenuItem>
-                <MenuItem value="RENTED">Rented</MenuItem>
-                <MenuItem value="COMPANY_PROVIDED">Company Provided</MenuItem>
+                <MenuItem value="Owned">Owned</MenuItem>
+                <MenuItem value="Rented">Rented</MenuItem>
+                <MenuItem value="Company Provided">Company Provided</MenuItem>
               </StyledTextField>
             </Box>
           </Grid>

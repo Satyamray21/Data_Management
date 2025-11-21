@@ -115,6 +115,7 @@ const memberSchema = new mongoose.Schema(
       aadhaarNo: { type: String },
       voterId: { type: String },
       passportNo: { type: String },
+                
 
       // PHOTOS
       panNoPhoto: { type: String },
@@ -123,6 +124,7 @@ const memberSchema = new mongoose.Schema(
       aadhaarNoPhoto: { type: String },
       voterIdPhoto: { type: String },
       passportNoPhoto: { type: String },
+      signedPhoto:{type:String},
     },
 
     // ===== EDUCATION & OCCUPATION =====

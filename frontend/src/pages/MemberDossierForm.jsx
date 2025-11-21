@@ -132,6 +132,7 @@ const MemberDossierForm = () => {
       passportNumber: "",
       passportPhoto: null,
       passportPreview: "",
+      signedPhoto:"",
     },
 
     professionalDetails: {
@@ -257,7 +258,12 @@ const MemberDossierForm = () => {
       /* -----------------------------------------
          ADDRESS DETAILS
       ----------------------------------------- */
-
+      if (values.Address?.residenceType) {
+  formDataToSend.append(
+    "addressDetails[residenceType]",
+    values.Address.residenceType
+  );
+}
       // Permanent Address
       Object.entries(values.Address?.permanentAddress || {}).forEach(([key, value]) => {
         if (key !== "proofDocument" && value) {
@@ -332,6 +338,7 @@ const MemberDossierForm = () => {
         drivingFrontPhoto: "drivingLicensePhoto",
         voterFrontPhoto: "voterIdPhoto",
         passportPhoto: "passportNoPhoto",
+        signedPhoto:"signedPhoto",
       };
 
       Object.entries(photoMap).forEach(([formKey, dbKey]) => {
