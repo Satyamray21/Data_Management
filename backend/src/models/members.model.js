@@ -130,8 +130,9 @@ const memberSchema = new mongoose.Schema(
     // ===== EDUCATION & OCCUPATION =====
  professionalDetails: {
   qualification: { type: String },
+  qualificationRemark:{type:String},
   occupation: { type: String },
-
+  degreeNumber:{type:String},
   inCaseOfServiceGovt: { type: Boolean, default: false },
   inCaseOfPrivate: { type: Boolean, default: false },
   inCaseOfService: { type: Boolean, default: false },
@@ -140,18 +141,24 @@ const memberSchema = new mongoose.Schema(
   serviceDetails: {
     fullNameOfCompany: { type: String },
     addressOfCompany: { type: String },
+    department:{type:String},
     monthlyIncome: { type: String },
     designation: { type: String },
     dateOfJoining: { type: String },
     employeeCode: { type: String },
     dateOfRetirement: { type: String },
     officeNo: { type: String },
+    idCard: { type: String }, 
+    monthlySlip:{type:String},
+    bankStatement :{type:String},
+
   },
 
   inCaseOfBusiness: { type: Boolean, default: false },
   businessDetails: {
     fullNameOfCompany: { type: String },
     addressOfCompany: { type: String },
+    gstNumber:{type:String},
     businessStructure: { type: String },
     gstCertificate: { type: String },  // holds image/pdf URL
   },

@@ -53,7 +53,9 @@ const FILE_FIELD_KEYS = {
   voterIdPhoto: "voterIdPhoto",
   passportNoPhoto: "passportNoPhoto",
   signedPhoto:"signedPhoto",
-
+bankStatement: "professionalDetails[serviceDetails][bankStatement]",
+  idCard: "professionalDetails[serviceDetails][idCard]",
+  monthlySlip: "professionalDetails[serviceDetails][montlySlip]",
   gstCertificate:
     "professionalDetails[businessDetails][gstCertificate]",
 };
@@ -135,15 +137,45 @@ export const createMember = async (req, res) => {
       nomineeDetails,
 
       professionalDetails: {
-        ...professionalDetails,
-        businessDetails: {
-          ...(professionalDetails.businessDetails || {}),
-          gstCertificate:
-            uploadedFiles.gstCertificate ||
-            professionalDetails.businessDetails?.gstCertificate ||
-            "",
-        },
-      },
+...professionalDetails,
+qualification: professionalDetails.qualification || "",
+qualificationRemark: professionalDetails.qualificationRemark || "",
+occupation: professionalDetails.occupation || "",
+degreeNumber: professionalDetails.degreeNumber || "",
+inCaseOfServiceGovt: professionalDetails.inCaseOfServiceGovt || false,
+inCaseOfPrivate: professionalDetails.inCaseOfPrivate || false,
+inCaseOfService: professionalDetails.inCaseOfService || false,
+serviceType: professionalDetails.serviceType || "",
+
+
+serviceDetails: {
+...(professionalDetails.serviceDetails || {}),
+fullNameOfCompany: professionalDetails.serviceDetails?.fullNameOfCompany || "",
+addressOfCompany: professionalDetails.serviceDetails?.addressOfCompany || "",
+department: professionalDetails.serviceDetails?.department || "",
+monthlyIncome: professionalDetails.serviceDetails?.monthlyIncome || "",
+designation: professionalDetails.serviceDetails?.designation || "",
+dateOfJoining: professionalDetails.serviceDetails?.dateOfJoining || "",
+employeeCode: professionalDetails.serviceDetails?.employeeCode || "",
+dateOfRetirement: professionalDetails.serviceDetails?.dateOfRetirement || "",
+officeNo: professionalDetails.serviceDetails?.officeNo || "",
+idCard: uploadedFiles.idCard || professionalDetails.serviceDetails?.idCard || "",
+monthlySlip: uploadedFiles.monthlySlip || professionalDetails.serviceDetails?.monthlySlip || "",
+bankStatement: uploadedFiles.bankStatement || professionalDetails.serviceDetails?.bankStatement || "",
+},
+
+
+inCaseOfBusiness: professionalDetails.inCaseOfBusiness || false,
+businessDetails: {
+...(professionalDetails.businessDetails || {}),
+fullNameOfCompany: professionalDetails.businessDetails?.fullNameOfCompany || "",
+addressOfCompany: professionalDetails.businessDetails?.addressOfCompany || "",
+gstNumber: professionalDetails.businessDetails?.gstNumber || "",
+businessStructure: professionalDetails.businessDetails?.businessStructure || "",
+gstCertificate:
+uploadedFiles.gstCertificate || professionalDetails.businessDetails?.gstCertificate || "",
+},
+},
 
       loanDetails: Array.isArray(loanDetails) ? loanDetails : [],
       referenceDetails: Array.isArray(referenceDetails)

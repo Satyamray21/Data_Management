@@ -260,6 +260,19 @@ const ProfessionalForm = ({ formData, handleChange }) => {
                     sx={textFieldStyles}
                   />
                 </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <StyledTextField
+                    label="Department"
+                    value={professionalDetails.serviceDetails?.department || ""}
+                    onChange={(e) =>
+                      handleProfessionalFieldChange("serviceDetails", {
+                        ...professionalDetails.serviceDetails,
+                       department: e.target.value,
+                      })
+                    }
+                    sx={textFieldStyles}
+                  />
+                </Grid>
 
                 <Grid size={{ xs: 12, md: 6 }}>
                   <StyledTextField
@@ -380,9 +393,75 @@ const ProfessionalForm = ({ formData, handleChange }) => {
                       }
                     }}
                   >
-                    {professionalDetails.serviceDetails?.idCard
-                      ? `ID Card Uploaded`
-                      : "Attach ID Card"}
+                    {professionalDetails.serviceDetails?.bankStatement
+                      ? `Bank Statement Uploaded`
+                      : "Attach Bank Statement of 6 months"}
+                    <input
+                      type="file"
+                      hidden
+                      accept="image/*,application/pdf"
+                      onChange={(e) =>
+                        handleProfessionalFieldChange("serviceDetails", {
+                          ...professionalDetails.serviceDetails,
+                          bankStatement: e.target.files[0],
+                        })
+                      }
+                    />
+                  </Button>
+                </Grid>
+
+                 <Grid size={{ xs: 12, md: 6 }}>
+                  <Button
+                    variant="outlined"
+                    component="label"
+                    fullWidth
+                    startIcon={<UploadIcon />}
+                    sx={{
+                      height: '56px',
+                      borderRadius: 2,
+                      border: `1px solid ${alpha(theme.palette.primary.main, 0.3)}`,
+                      '&:hover': {
+                        border: `1px solid ${theme.palette.primary.main}`,
+                        backgroundColor: alpha(theme.palette.primary.main, 0.04),
+                      }
+                    }}
+                  >
+                    {professionalDetails.serviceDetails?.monthlySlip
+                      ? `Montly Slip`
+                      : "Attach Montly slip of last 6 months "}
+                    <input
+                      type="file"
+                      hidden
+                      accept="image/*,application/pdf"
+                      onChange={(e) =>
+                        handleProfessionalFieldChange("serviceDetails", {
+                          ...professionalDetails.serviceDetails,
+                          montlySlip: e.target.files[0],
+                        })
+                      }
+                    />
+                  </Button>
+                </Grid>
+
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <Button
+                    variant="outlined"
+                    component="label"
+                    fullWidth
+                    startIcon={<UploadIcon />}
+                    sx={{
+                      height: '56px',
+                      borderRadius: 2,
+                      border: `1px solid ${alpha(theme.palette.primary.main, 0.3)}`,
+                      '&:hover': {
+                        border: `1px solid ${theme.palette.primary.main}`,
+                        backgroundColor: alpha(theme.palette.primary.main, 0.04),
+                      }
+                    }}
+                  >
+                    {professionalDetails.serviceDetails?.monthlySlip
+                      ? `Office Id`
+                      : "Attach Office Id "}
                     <input
                       type="file"
                       hidden

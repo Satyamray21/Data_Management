@@ -138,6 +138,7 @@ const MemberDossierForm = () => {
     professionalDetails: {
       qualification: "",
       occupation: "",
+      qualificationRemark:"",
       familyMemberMemberOfSociety: false,
       familyMembers: [
         {
@@ -373,16 +374,26 @@ const MemberDossierForm = () => {
       }
 
       /* ------ SERVICE DETAILS ------- */
-      if (pro.serviceDetails) {
-        Object.entries(pro.serviceDetails).forEach(([key, value]) => {
-          if (value) {
-            formDataToSend.append(
-              `professionalDetails[serviceDetails][${key}]`,
-              value.toString()
-            );
-          }
-        });
-      }
+      /* ------ SERVICE DETAILS (including files) ------- */
+if (pro.serviceDetails) {
+  Object.entries(pro.serviceDetails).forEach(([key, value]) => {
+    if (!value) return;
+
+    if (value instanceof File) {
+      // File → append directly
+      formDataToSend.append(
+        `professionalDetails[serviceDetails][${key}]`,
+        value
+      );
+    } else {
+      // Normal text values
+      formDataToSend.append(
+        `professionalDetails[serviceDetails][${key}]`,
+        value.toString()
+      );
+    }
+  });
+}
 
       /* ------ BUSINESS ------- */
       if (pro.inCaseOfBusiness) {
