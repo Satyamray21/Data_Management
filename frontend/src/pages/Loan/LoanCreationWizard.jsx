@@ -22,7 +22,7 @@ import { createLoan, resetLoanState } from "../../features/loan/loanSlice";
 
 const steps = ["Loan Details", "Bank Details", "PDC Details", "Guarantor Details", "Confirmation"];
 
-// Validation Schema for Bank Details
+
 const bankDetailsValidationSchema = Yup.object({
     bankName: Yup.string().required('Bank Name is required'),
     branchName: Yup.string().required('Branch Name is required'),
@@ -69,96 +69,115 @@ const LoanCreationWizard = () => {
     };
 
     // Step 4: Collect Guarantor details
-    const handleGuarantorSubmit = (guarantorData) => {
-        setGuarantorDetails(guarantorData);
-        setActiveStep(4);
-    };
+   const handleGuarantorSubmit = (data) => {
+    setGuarantorDetails(data);
+
+    setLoanFormData(prev => ({
+        ...prev,
+        suretyGiven: data.suretyGiven
+    }));
+
+    setActiveStep(4);
+};
+
 
     const handleFinalSubmit = async () => {
-        // Prepare final payload according to backend expectations
-        const finalPayload = {
-            typeOfLoan: loanFormData.loanType,
-            membershipNumber: loanFormData.loanType === "LAF"
-                ? loanFormData.lafMembershipNumber
-                : loanFormData.membershipNumber,
-            bankDetails: {
+
+   const finalPayload = {
+    typeOfLoan: loanFormData.loanType,
+    membershipNumber: loanFormData.loanType === "LAF"
+        ? loanFormData.lafMembershipNumber
+        : loanFormData.membershipNumber,
+
+    bankDetails: {
+        bankName: bankDetails.bankName,
+        branchName: bankDetails.branchName,
+        accountNumber: bankDetails.accountNumber,
+        ifscCode: bankDetails.ifscCode,
+        accountHolderName: bankDetails.accountHolderName
+    },
+
+    // ✅ REAL FIX HERE
+    suretyGiven: Array.isArray(guarantorDetails.guarantors)
+        ? guarantorDetails.guarantors.map(g => ({
+            memberId: g.memberId,
+            memberName: g.fullName,
+            membershipNumber: g.membershipNumber,
+            mobileNumber: g.mobileNumber
+        }))
+        : [],
+
+    pdcDetails: []
+};
+
+
+    // -----------------------------
+    // PDC DETAILS
+    // -----------------------------
+    if (pdcDetails.chequeDetails && pdcDetails.chequeDetails.length > 0) {
+        pdcDetails.chequeDetails.forEach((cheque, index) => {
+            const pdcItem = {
                 bankName: bankDetails.bankName,
                 branchName: bankDetails.branchName,
                 accountNumber: bankDetails.accountNumber,
                 ifscCode: bankDetails.ifscCode,
-                accountHolderName: bankDetails.accountHolderName
-            },
-            guarantorDetails: guarantorDetails.guarantors || [],
-            pdcDetails: [] // Initialize as empty array
-        };
+                numberOfCheques: pdcDetails.numberOfCheques || 1,
+                chequeNumber: cheque.chequeNumber || `CHQ${index + 1}`,
+                chequeDate: cheque.chequeDate,
+                amount: cheque.amount,
+                seriesDate: cheque.seriesDate || new Date().toISOString().split('T')[0]
+            };
+            finalPayload.pdcDetails.push(pdcItem);
+        });
+    } else {
+        finalPayload.pdcDetails = [{
+            bankName: bankDetails.bankName,
+            branchName: bankDetails.branchName,
+            accountNumber: bankDetails.accountNumber,
+            ifscCode: bankDetails.ifscCode,
+            numberOfCheques: 0,
+            chequeNumber: '',
+            chequeDate: '',
+            amount: 0,
+            seriesDate: ''
+        }];
+    }
 
-        // Add PDC details only if they exist and have data
-        if (pdcDetails.chequeDetails && pdcDetails.chequeDetails.length > 0) {
-            pdcDetails.chequeDetails.forEach((cheque, index) => {
-                const pdcItem = {
-                    bankName: bankDetails.bankName,
-                    branchName: bankDetails.branchName,
-                    accountNumber: bankDetails.accountNumber,
-                    ifscCode: bankDetails.ifscCode,
-                    numberOfCheques: pdcDetails.numberOfCheques || 1,
-                    chequeNumber: cheque.chequeNumber || `CHQ${index + 1}`,
-                    chequeDate: cheque.chequeDate,
-                    amount: cheque.amount,
-                    seriesDate: cheque.seriesDate || new Date().toISOString().split('T')[0]
-                };
-                finalPayload.pdcDetails.push(pdcItem);
-            });
-        } else {
-            // If no PDC details, still send empty array or basic structure
-            finalPayload.pdcDetails = [{
-                bankName: bankDetails.bankName,
-                branchName: bankDetails.branchName,
-                accountNumber: bankDetails.accountNumber,
-                ifscCode: bankDetails.ifscCode,
-                numberOfCheques: 0,
-                chequeNumber: '',
-                chequeDate: '',
-                amount: 0,
-                seriesDate: ''
-            }];
-        }
+    // -----------------------------
+    // LOAN FIELDS
+    // -----------------------------
+    if (loanFormData.loanType === "Loan" || loanFormData.loanType === "LAP") {
+        finalPayload.loanDate = loanFormData.loanDate;
+        finalPayload.loanAmount = loanFormData.loanAmount;
+        finalPayload.purposeOfLoan = loanFormData.purpose;
+    }
 
-        // Add loan-specific fields
-        if (loanFormData.loanType === "Loan" || loanFormData.loanType === "LAP") {
-            finalPayload.loanDate = loanFormData.loanDate;
-            finalPayload.loanAmount = loanFormData.loanAmount;
-            finalPayload.purposeOfLoan = loanFormData.purpose;
-        }
+    // -----------------------------
+    // LAF FIELDS
+    // -----------------------------
+    if (loanFormData.loanType === "LAF") {
+        finalPayload.lafDate = loanFormData.lafDate;
+        finalPayload.lafAmount = loanFormData.lafAmount;
+        finalPayload.fdrAmount = loanFormData.fdrAmount;
+        finalPayload.fdrSchema = loanFormData.fdrScheme;
+    }
 
-        // Add LAF-specific fields
-        if (loanFormData.loanType === "LAF") {
-            finalPayload.lafDate = loanFormData.lafDate;
-            finalPayload.lafAmount = loanFormData.lafAmount;
-            finalPayload.fdrAmount = loanFormData.fdrAmount;
-            finalPayload.fdrSchema = loanFormData.fdrScheme;
-        }
+    console.log("🚀 FINAL PAYLOAD TO BE SENT:", JSON.stringify(finalPayload, null, 2));
 
-        console.log("🚀 FINAL PAYLOAD TO BE SENT:", JSON.stringify(finalPayload, null, 2));
+    try {
+        const result = await dispatch(createLoan(finalPayload)).unwrap();
+        setCreatedLoanId(result._id);
+        setApiSuccess(true);
 
-        try {
-            // Dispatch the Redux action
-            const result = await dispatch(createLoan(finalPayload)).unwrap();
+        setTimeout(() => {
+            navigate("/view-loan");
+        }, 2000);
 
-            // If successful, set the created loan ID
-            setCreatedLoanId(result._id);
-            setApiSuccess(true);
+    } catch (err) {
+        console.error("❌ Loan creation failed:", err);
+    }
+};
 
-            console.log("✅ Loan created successfully:", result);
-
-            // Auto navigate to view-loan after success
-            setTimeout(() => {
-                navigate("/view-loan");
-            }, 2000);
-
-        } catch (err) {
-            console.error("❌ Loan creation failed:", err);
-        }
-    };
 
     // Manual navigation to view-loan
     const handleViewLoan = () => {

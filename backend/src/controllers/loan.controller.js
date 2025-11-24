@@ -1,217 +1,157 @@
 import Loan from "../models/loan.model.js";
 import Member from "../models/members.model.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 
-
-const getSuretyData = async (membershipNo, pdc = []) => {
-    const m = await Member.findOne({
-        "personalDetails.membershipNumber": membershipNo,
-    });
-
-    if (!m) return null;
-
-    return {
-        memberId: m._id,
-        memberName: m.personalDetails.nameOfMember,
-        membershipNumber: m.personalDetails.membershipNumber,
-        mobileNumber: m.personalDetails.phoneNo,
-        pdcDetails: pdc,
-    };
-};
-
+/* -----------------------------------------------------------------------------
+ * CREATE LOAN
+ * ---------------------------------------------------------------------------*/
 export const createLoan = async (req, res) => {
-    try {
-        const {
-            membershipNumber,
-            typeOfLoan,
-            loanDate,
-            purposeOfLoan,
-            loanAmount,
-            lafDate,
-            fdrAmount,
-            fdrSchema,
-            pdcDetails = [],
-            suretyGiven = [],
-            suretyTaken = [],
-            bankDetails = {},
-        } = req.body;
+  try {
+    const data = req.body;
+    console.log("Req",req.body);
+    if (!data.typeOfLoan) throw new ApiError(400, "typeOfLoan is required");
 
-        // 1️⃣ Find main borrower
-        const mainMember = await Member.findOne({
-            "personalDetails.membershipNumber": membershipNumber,
-        });
+    let member = null;
 
-        if (!mainMember) {
-            return res.status(404).json({
-                success: false,
-                message: "Main member not found",
-            });
-        }
-
-        // 2️⃣ Prepare surety lists
-        const suretyGivenList = [];
-        for (let s of suretyGiven) {
-            const details = await getSuretyData(s.membershipNumber, s.pdcDetails || []);
-            if (details) suretyGivenList.push(details);
-        }
-
-        const suretyTakenList = [];
-        for (let s of suretyTaken) {
-            const details = await getSuretyData(s.membershipNumber, s.pdcDetails || []);
-            if (details) suretyTakenList.push(details);
-        }
-
-        // 3️⃣ Create Loan
-        const loan = await Loan.create({
-            memberId: mainMember._id,
-            membershipNumber,
-            typeOfLoan,
-            loanDate,
-            purposeOfLoan,
-            loanAmount,
-            lafDate,
-            fdrAmount,
-            fdrSchema,
-            pdcDetails,
-            bankDetails,
-            suretyGiven: suretyGivenList,
-            suretyTaken: suretyTakenList,
-        });
-
-        return res.status(201).json({
-            success: true,
-            message: "Loan created successfully",
-            data: loan,
-        });
-    } catch (error) {
-        console.log("❌ CREATE ERROR:", error);
-        return res.status(500).json({ success: false, message: error.message });
+    if (data.memberId) {
+      member = await Member.findById(data.memberId);
+      if (!member) throw new ApiError(404, "Member not found");
+      data.membershipNumber = member.personalDetails.membershipNumber;
     }
+
+    if (!data.membershipNumber)
+      throw new ApiError(400, "membershipNumber is required");
+
+    const loanPayload = {
+  memberId: data.memberId || null,
+  membershipNumber: data.membershipNumber,
+  typeOfLoan: data.typeOfLoan,
+  loanDate: data.loanDate,
+  loanAmount: data.loanAmount,
+  purposeOfLoan: data.purposeOfLoan,
+  lafDate: data.lafDate,
+  lafAmount: data.lafAmount,
+  fdrAmount: data.fdrAmount,
+  fdrScheme: data.fdrScheme,
+  bankDetails: data.bankDetails || {},
+  pdcDetails: Array.isArray(data.pdcDetails) ? data.pdcDetails : [],
+  suretyGiven: Array.isArray(data.suretyGiven) ? data.suretyGiven : [],
+  suretyTaken: [],
 };
 
 
-export const getAllLoans = async (req, res) => {
-    try {
-        const loans = await Loan.find()
-            .populate("memberId", "personalDetails.nameOfMember personalDetails.membershipNumber personalDetails.phoneNo")
-            .sort({ createdAt: -1 });
+    const newLoan = await Loan.create(loanPayload);
 
-        return res.status(200).json({ success: true, data: loans });
-    } catch (error) {
-        return res.status(500).json({ success: false, message: error.message });
-    }
-};
-
-
-export const getLoanById = async (req, res) => {
-    try {
-        const loan = await Loan.findById(req.params.id)
-            .populate("memberId", "personalDetails.nameOfMember personalDetails.membershipNumber personalDetails.phoneNo");
-
-        if (!loan) {
-            return res.status(404).json({ success: false, message: "Loan not found" });
-        }
-
-        return res.status(200).json({ success: true, data: loan });
-    } catch (error) {
-        return res.status(500).json({ success: false, message: error.message });
-    }
-};
-
-
-export const updateLoan = async (req, res) => {
-    try {
-        const {
-            membershipNumber,
-            suretyGiven = [],
-            suretyTaken = [],
-        } = req.body;
-
-        const updateData = { ...req.body };
-
-        // Update surety fields if provided
-        if (suretyGiven.length > 0) {
-            const list = [];
-            for (let s of suretyGiven) {
-                const details = await getSuretyData(s.membershipNumber, s.pdcDetails || []);
-                if (details) list.push(details);
-            }
-            updateData.suretyGiven = list;
-        }
-
-        if (suretyTaken.length > 0) {
-            const list = [];
-            for (let s of suretyTaken) {
-                const details = await getSuretyData(s.membershipNumber, s.pdcDetails || []);
-                if (details) list.push(details);
-            }
-            updateData.suretyTaken = list;
-        }
-
-        const updatedLoan = await Loan.findByIdAndUpdate(
-            req.params.id,
-            updateData,
-            { new: true, runValidators: true }
+    // update surety taken for each guarantor
+    if (loanPayload.suretyGiven.length > 0) {
+      for (let g of loanPayload.suretyGiven) {
+        await Loan.updateMany(
+          { memberId: g.memberId },
+          {
+            $push: {
+              suretyTaken: {
+                memberId: data.memberId,
+                membershipNumber: data.membershipNumber,
+                memberName: member?.personalDetails?.fullName || "",
+                mobileNumber: member?.personalDetails?.mobileNumber || "",
+              },
+            },
+          }
         );
-
-        if (!updatedLoan) {
-            return res.status(404).json({ success: false, message: "Loan not found" });
-        }
-
-        return res.status(200).json({
-            success: true,
-            message: "Loan updated successfully",
-            data: updatedLoan,
-        });
-    } catch (error) {
-        console.log("❌ UPDATE ERROR:", error);
-        return res.status(500).json({ success: false, message: error.message });
+      }
     }
+
+    return res
+      .status(201)
+      .json(new ApiResponse(201, newLoan, "Loan created successfully"));
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message,
+    });
+  }
 };
 
+/* -----------------------------------------------------------------------------
+ * GET ALL LOANS
+ * ---------------------------------------------------------------------------*/
+export const getAllLoans = async (req, res) => {
+  try {
+    const loans = await Loan.find().sort({ createdAt: -1 });
 
+    return res
+      .status(200)
+      .json(new ApiResponse(200, loans, "Loans fetched successfully"));
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/* -----------------------------------------------------------------------------
+ * GET LOAN BY ID
+ * ---------------------------------------------------------------------------*/
+export const getLoanById = async (req, res) => {
+  try {
+    const loan = await Loan.findById(req.params.id);
+
+    if (!loan) throw new ApiError(404, "Loan not found");
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, loan, "Loan fetched successfully"));
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/* -----------------------------------------------------------------------------
+ * UPDATE LOAN
+ * ---------------------------------------------------------------------------*/
+export const updateLoan = async (req, res) => {
+  try {
+    const updateData = req.body;
+
+    const loan = await Loan.findById(req.params.id);
+    if (!loan) throw new ApiError(404, "Loan not found");
+
+    // update loan fields
+    Object.assign(loan, updateData);
+
+    await loan.save();
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, loan, "Loan updated successfully"));
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/* -----------------------------------------------------------------------------
+ * DELETE LOAN
+ * ---------------------------------------------------------------------------*/
 export const deleteLoan = async (req, res) => {
-    try {
-        const loan = await Loan.findByIdAndDelete(req.params.id);
+  try {
+    const loan = await Loan.findById(req.params.id);
 
-        if (!loan) {
-            return res.status(404).json({
-                success: false,
-                message: "Loan not found",
-            });
-        }
+    if (!loan) throw new ApiError(404, "Loan not found");
 
-        return res.status(200).json({
-            success: true,
-            message: "Loan deleted successfully",
-        });
-    } catch (error) {
-        return res.status(500).json({ success: false, message: error.message });
-    }
-};
+    await loan.deleteOne();
 
-
-export const getLoansByMemberId = async (req, res) => {
-    try {
-        const { membershipNumber } = req.params;
-
-        const member = await Member.findOne({
-            "personalDetails.membershipNumber": membershipNumber,
-        });
-
-        if (!member) {
-            return res.status(404).json({
-                success: false,
-                message: "Member not found",
-            });
-        }
-
-        const loans = await Loan.find({ membershipNumber }).sort({ createdAt: -1 });
-
-        return res.status(200).json({
-            success: true,
-            data: loans,
-        });
-    } catch (error) {
-        return res.status(500).json({ success: false, message: error.message });
-    }
+    return res
+      .status(200)
+      .json(new ApiResponse(200, null, "Loan deleted successfully"));
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message,
+    });
+  }
 };

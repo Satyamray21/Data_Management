@@ -5,7 +5,7 @@ import {
     getLoanById,
     updateLoan,
     deleteLoan,
-    getLoansByMemberId,
+    //getLoansByMemberId,
 } from "../controllers/loan.controller.js";
 
 const router = express.Router();
@@ -20,7 +20,7 @@ router.get("/", getAllLoans);
 router.get("/:id", getLoanById);
 
 // Get Loans by Member ID
-router.get("/member/:memberId", getLoansByMemberId);
+//router.get("/member/:memberId", getLoansByMemberId);
 
 // Update Loan
 router.put("/:id", updateLoan);
