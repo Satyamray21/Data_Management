@@ -1,11 +1,11 @@
 import express from "express";
 import {
-  createLoan,
-  getAllLoans,
-  getLoanById,
-  updateLoan,
-  deleteLoan,
-  getLoansByMemberId,
+    createLoan,
+    getAllLoans,
+    getLoanById,
+    updateLoan,
+    deleteLoan,
+    getLoansByMemberId,
 } from "../controllers/loan.controller.js";
 
 const router = express.Router();

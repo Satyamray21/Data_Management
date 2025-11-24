@@ -2,197 +2,231 @@ import Loan from "../models/loan.model.js";
 import Member from "../models/members.model.js";
 
 // =============================
+// Helper → Get Surety Data
+// =============================
+const getSuretyData = async (membershipNo, pdc = []) => {
+    const m = await Member.findOne({
+        "personalDetails.membershipNumber": membershipNo,
+    });
+
+    if (!m) return null;
+
+    return {
+        memberId: m._id,
+        memberName: m.personalDetails.nameOfMember,
+        membershipNumber: m.personalDetails.membershipNumber,
+        mobileNumber: m.personalDetails.phoneNo,
+        pdcDetails: pdc,
+    };
+};
+
+// =============================
 // CREATE LOAN
 // =============================
 export const createLoan = async (req, res) => {
-  try {
-    const {
-      memberId,
-      typeOfLoan,
-      loanDate,
-      purposeOfLoan,
-      loanAmount,
-      lafDate,
-      fdrAmount,
-      fdrSchema,
-      pdcDetails,
-    } = req.body;
+    try {
+        const {
+            membershipNumber,
+            typeOfLoan,
+            loanDate,
+            purposeOfLoan,
+            loanAmount,
+            lafDate,
+            fdrAmount,
+            fdrSchema,
+            pdcDetails = [],
+            suretyGiven = [],
+            suretyTaken = [],
+            bankDetails = {},
+        } = req.body;
 
-    // ========== 1. Check Member Exists ==========
-    const member = await Member.findById(memberId);
-    if (!member) {
-      return res.status(404).json({
-        success: false,
-        message: "Member not found",
-      });
+        // 1️⃣ Find main borrower
+        const mainMember = await Member.findOne({
+            "personalDetails.membershipNumber": membershipNumber,
+        });
+
+        if (!mainMember) {
+            return res.status(404).json({
+                success: false,
+                message: "Main member not found",
+            });
+        }
+
+        // 2️⃣ Prepare surety lists
+        const suretyGivenList = [];
+        for (let s of suretyGiven) {
+            const details = await getSuretyData(s.membershipNumber, s.pdcDetails || []);
+            if (details) suretyGivenList.push(details);
+        }
+
+        const suretyTakenList = [];
+        for (let s of suretyTaken) {
+            const details = await getSuretyData(s.membershipNumber, s.pdcDetails || []);
+            if (details) suretyTakenList.push(details);
+        }
+
+        // 3️⃣ Create Loan
+        const loan = await Loan.create({
+            memberId: mainMember._id,
+            membershipNumber,
+            typeOfLoan,
+            loanDate,
+            purposeOfLoan,
+            loanAmount,
+            lafDate,
+            fdrAmount,
+            fdrSchema,
+            pdcDetails,
+            bankDetails,
+            suretyGiven: suretyGivenList,
+            suretyTaken: suretyTakenList,
+        });
+
+        return res.status(201).json({
+            success: true,
+            message: "Loan created successfully",
+            data: loan,
+        });
+    } catch (error) {
+        console.log("❌ CREATE ERROR:", error);
+        return res.status(500).json({ success: false, message: error.message });
     }
-
-    // ========== 2. Create Loan ==========
-    const loan = await Loan.create({
-      memberId,
-      typeOfLoan,
-      loanDate,
-      purposeOfLoan,
-      loanAmount,
-      lafDate,
-      fdrAmount,
-      fdrSchema,
-      pdcDetails,
-    });
-
-    return res.status(201).json({
-      success: true,
-      message: "Loan created successfully",
-      data: loan,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
 };
 
 // =============================
 // GET ALL LOANS
 // =============================
 export const getAllLoans = async (req, res) => {
-  try {
-    const loans = await Loan.find()
-      .populate("memberId", "personalDetails.nameOfMember personalDetails.membershipNumber personalDetails.phoneNo")
-      .sort({ createdAt: -1 });
+    try {
+        const loans = await Loan.find()
+            .populate("memberId", "personalDetails.nameOfMember personalDetails.membershipNumber personalDetails.phoneNo")
+            .sort({ createdAt: -1 });
 
-    return res.status(200).json({
-      success: true,
-      data: loans,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
+        return res.status(200).json({ success: true, data: loans });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
 };
 
 // =============================
 // GET SINGLE LOAN
 // =============================
 export const getLoanById = async (req, res) => {
-  try {
-    const loan = await Loan.findById(req.params.id).populate(
-      "memberId",
-      "personalDetails.nameOfMember personalDetails.membershipNumber personalDetails.phoneNo"
-    );
+    try {
+        const loan = await Loan.findById(req.params.id)
+            .populate("memberId", "personalDetails.nameOfMember personalDetails.membershipNumber personalDetails.phoneNo");
 
-    if (!loan) {
-      return res.status(404).json({
-        success: false,
-        message: "Loan not found",
-      });
+        if (!loan) {
+            return res.status(404).json({ success: false, message: "Loan not found" });
+        }
+
+        return res.status(200).json({ success: true, data: loan });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
     }
-
-    return res.status(200).json({
-      success: true,
-      data: loan,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
 };
 
 // =============================
-// UPDATE LOAN
+// UPDATE LOAN (with Surety)
 // =============================
 export const updateLoan = async (req, res) => {
-  try {
-    const updatedLoan = await Loan.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    ).populate("memberId");
+    try {
+        const {
+            membershipNumber,
+            suretyGiven = [],
+            suretyTaken = [],
+        } = req.body;
 
-    if (!updatedLoan) {
-      return res.status(404).json({
-        success: false,
-        message: "Loan not found",
-      });
+        const updateData = { ...req.body };
+
+        // Update surety fields if provided
+        if (suretyGiven.length > 0) {
+            const list = [];
+            for (let s of suretyGiven) {
+                const details = await getSuretyData(s.membershipNumber, s.pdcDetails || []);
+                if (details) list.push(details);
+            }
+            updateData.suretyGiven = list;
+        }
+
+        if (suretyTaken.length > 0) {
+            const list = [];
+            for (let s of suretyTaken) {
+                const details = await getSuretyData(s.membershipNumber, s.pdcDetails || []);
+                if (details) list.push(details);
+            }
+            updateData.suretyTaken = list;
+        }
+
+        const updatedLoan = await Loan.findByIdAndUpdate(
+            req.params.id,
+            updateData,
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedLoan) {
+            return res.status(404).json({ success: false, message: "Loan not found" });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Loan updated successfully",
+            data: updatedLoan,
+        });
+    } catch (error) {
+        console.log("❌ UPDATE ERROR:", error);
+        return res.status(500).json({ success: false, message: error.message });
     }
-
-    return res.status(200).json({
-      success: true,
-      message: "Loan updated successfully",
-      data: updatedLoan,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
 };
 
 // =============================
 // DELETE LOAN
 // =============================
 export const deleteLoan = async (req, res) => {
-  try {
-    const loan = await Loan.findByIdAndDelete(req.params.id);
+    try {
+        const loan = await Loan.findByIdAndDelete(req.params.id);
 
-    if (!loan) {
-      return res.status(404).json({
-        success: false,
-        message: "Loan not found",
-      });
+        if (!loan) {
+            return res.status(404).json({
+                success: false,
+                message: "Loan not found",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Loan deleted successfully",
+        });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
     }
-
-    return res.status(200).json({
-      success: true,
-      message: "Loan deleted successfully",
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
 };
 
 // =============================
-// GET LOANS BY MEMBER ID
+// GET LOANS BY MEMBER MEMBERSHIP NUMBER
 // =============================
 export const getLoansByMemberId = async (req, res) => {
-  try {
-    const { memberId } = req.params;
+    try {
+        const { membershipNumber } = req.params;
 
-    // Check if member exists
-    const member = await Member.findById(memberId);
-    if (!member) {
-      return res.status(404).json({
-        success: false,
-        message: "Member not found",
-      });
+        const member = await Member.findOne({
+            "personalDetails.membershipNumber": membershipNumber,
+        });
+
+        if (!member) {
+            return res.status(404).json({
+                success: false,
+                message: "Member not found",
+            });
+        }
+
+        const loans = await Loan.find({ membershipNumber }).sort({ createdAt: -1 });
+
+        return res.status(200).json({
+            success: true,
+            data: loans,
+        });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
     }
-
-    // Get loans linked to this member
-    const loans = await Loan.find({ memberId })
-      .populate(
-        "memberId",
-        "personalDetails.nameOfMember personalDetails.membershipNumber personalDetails.phoneNo"
-      )
-      .sort({ createdAt: -1 });
-
-    return res.status(200).json({
-      success: true,
-      data: loans,
-    });
-
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
 };

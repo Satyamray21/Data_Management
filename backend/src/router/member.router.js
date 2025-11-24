@@ -46,7 +46,7 @@ const fileFields = [
   { name: "voterIdPhoto", maxCount: 1 },
   { name: "passportNoPhoto", maxCount: 1 },
   { name: "signedPhoto", maxCount: 1 },
-   { name: "professionalDetails[serviceDetails][bankStatement]", maxCount: 1 },
+  { name: "professionalDetails[serviceDetails][bankStatement]", maxCount: 1 },
   { name: "professionalDetails[serviceDetails][idCard]", maxCount: 1 },
   { name: "professionalDetails[serviceDetails][montlySlip]", maxCount: 1 },
 

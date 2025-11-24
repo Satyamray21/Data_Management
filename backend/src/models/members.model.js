@@ -12,18 +12,18 @@ const memberSchema = new mongoose.Schema(
         default: false,
       },
       guardianName: {
-    type: String,
-    required: function () {
-      return this.minor === true;
-    },
-  },
+        type: String,
+        required: function () {
+          return this.minor === true;
+        },
+      },
 
-  guardianRelation: {
-    type: String,
-    required: function () {
-      return this.minor === true;
-    },
-  },
+      guardianRelation: {
+        type: String,
+        required: function () {
+          return this.minor === true;
+        },
+      },
       fatherTitle: { type: String },
       nameOfFather: { type: String },
       motherTitle: { type: String },
@@ -44,9 +44,9 @@ const memberSchema = new mongoose.Schema(
 
     // ===== ADDRESS DETAILS =====
     addressDetails: {
-      residenceType:{
+      residenceType: {
         type: String,
-        enum:['Owned','Rented','Company Provided','Other'],
+        enum: ['Owned', 'Rented', 'Company Provided', 'Other'],
       },
       permanentAddress: {
         flatHouseNo: { type: String },
@@ -115,7 +115,7 @@ const memberSchema = new mongoose.Schema(
       aadhaarNo: { type: String },
       voterId: { type: String },
       passportNo: { type: String },
-                
+
 
       // PHOTOS
       panNoPhoto: { type: String },
@@ -124,47 +124,47 @@ const memberSchema = new mongoose.Schema(
       aadhaarNoPhoto: { type: String },
       voterIdPhoto: { type: String },
       passportNoPhoto: { type: String },
-      signedPhoto:{type:String},
+      signedPhoto: { type: String },
     },
 
     // ===== EDUCATION & OCCUPATION =====
- professionalDetails: {
-  qualification: { type: String },
-  qualificationRemark:{type:String},
-  occupation: { type: String },
-  degreeNumber:{type:String},
-  inCaseOfServiceGovt: { type: Boolean, default: false },
-  inCaseOfPrivate: { type: Boolean, default: false },
-  inCaseOfService: { type: Boolean, default: false },
-  serviceType: { type: String },
+    professionalDetails: {
+      qualification: { type: String },
+      qualificationRemark: { type: String },
+      occupation: { type: String },
+      degreeNumber: { type: String },
+      inCaseOfServiceGovt: { type: Boolean, default: false },
+      inCaseOfPrivate: { type: Boolean, default: false },
+      inCaseOfService: { type: Boolean, default: false },
+      serviceType: { type: String },
 
-  serviceDetails: {
-    fullNameOfCompany: { type: String },
-    addressOfCompany: { type: String },
-    department:{type:String},
-    monthlyIncome: { type: String },
-    designation: { type: String },
-    dateOfJoining: { type: String },
-    employeeCode: { type: String },
-    dateOfRetirement: { type: String },
-    officeNo: { type: String },
-    idCard: { type: String }, 
-    monthlySlip:{type:String},
-    bankStatement :{type:String},
+      serviceDetails: {
+        fullNameOfCompany: { type: String },
+        addressOfCompany: { type: String },
+        department: { type: String },
+        monthlyIncome: { type: String },
+        designation: { type: String },
+        dateOfJoining: { type: String },
+        employeeCode: { type: String },
+        dateOfRetirement: { type: String },
+        officeNo: { type: String },
+        idCard: { type: String },
+        monthlySlip: { type: String },
+        bankStatement: { type: String },
 
-  },
+      },
 
-  inCaseOfBusiness: { type: Boolean, default: false },
-  businessDetails: {
-    fullNameOfCompany: { type: String },
-    addressOfCompany: { type: String },
-    gstNumber:{type:String},
-    businessStructure: { type: String },
-    gstCertificate: { type: String },  // holds image/pdf URL
-  },
+      inCaseOfBusiness: { type: Boolean, default: false },
+      businessDetails: {
+        fullNameOfCompany: { type: String },
+        addressOfCompany: { type: String },
+        gstNumber: { type: String },
+        businessStructure: { type: String },
+        gstCertificate: { type: String },  // holds image/pdf URL
+      },
 
- 
-},
+
+    },
 
 
 

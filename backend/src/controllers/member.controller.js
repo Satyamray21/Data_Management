@@ -52,8 +52,8 @@ const FILE_FIELD_KEYS = {
   drivingLicensePhoto: "drivingLicensePhoto",
   voterIdPhoto: "voterIdPhoto",
   passportNoPhoto: "passportNoPhoto",
-  signedPhoto:"signedPhoto",
-bankStatement: "professionalDetails[serviceDetails][bankStatement]",
+  signedPhoto: "signedPhoto",
+  bankStatement: "professionalDetails[serviceDetails][bankStatement]",
   idCard: "professionalDetails[serviceDetails][idCard]",
   monthlySlip: "professionalDetails[serviceDetails][montlySlip]",
   gstCertificate:
@@ -126,10 +126,10 @@ export const createMember = async (req, res) => {
           uploadedFiles.voterIdPhoto || documents.voterIdPhoto || "",
         passportNoPhoto:
           uploadedFiles.passportNoPhoto || documents.passportNoPhoto || "",
-          signedPhoto:
+        signedPhoto:
           uploadedFiles.signedPhoto || documents.signedPhoto || "",
-          
-        
+
+
       },
 
       familyDetails,
@@ -137,52 +137,52 @@ export const createMember = async (req, res) => {
       nomineeDetails,
 
       professionalDetails: {
-...professionalDetails,
-qualification: professionalDetails.qualification || "",
-qualificationRemark: professionalDetails.qualificationRemark || "",
-occupation: professionalDetails.occupation || "",
-degreeNumber: professionalDetails.degreeNumber || "",
-inCaseOfServiceGovt: professionalDetails.inCaseOfServiceGovt || false,
-inCaseOfPrivate: professionalDetails.inCaseOfPrivate || false,
-inCaseOfService: professionalDetails.inCaseOfService || false,
-serviceType: professionalDetails.serviceType || "",
+        ...professionalDetails,
+        qualification: professionalDetails.qualification || "",
+        qualificationRemark: professionalDetails.qualificationRemark || "",
+        occupation: professionalDetails.occupation || "",
+        degreeNumber: professionalDetails.degreeNumber || "",
+        inCaseOfServiceGovt: professionalDetails.inCaseOfServiceGovt || false,
+        inCaseOfPrivate: professionalDetails.inCaseOfPrivate || false,
+        inCaseOfService: professionalDetails.inCaseOfService || false,
+        serviceType: professionalDetails.serviceType || "",
 
 
-serviceDetails: {
-...(professionalDetails.serviceDetails || {}),
-fullNameOfCompany: professionalDetails.serviceDetails?.fullNameOfCompany || "",
-addressOfCompany: professionalDetails.serviceDetails?.addressOfCompany || "",
-department: professionalDetails.serviceDetails?.department || "",
-monthlyIncome: professionalDetails.serviceDetails?.monthlyIncome || "",
-designation: professionalDetails.serviceDetails?.designation || "",
-dateOfJoining: professionalDetails.serviceDetails?.dateOfJoining || "",
-employeeCode: professionalDetails.serviceDetails?.employeeCode || "",
-dateOfRetirement: professionalDetails.serviceDetails?.dateOfRetirement || "",
-officeNo: professionalDetails.serviceDetails?.officeNo || "",
-idCard: uploadedFiles.idCard || professionalDetails.serviceDetails?.idCard || "",
-monthlySlip: uploadedFiles.monthlySlip || professionalDetails.serviceDetails?.monthlySlip || "",
-bankStatement: uploadedFiles.bankStatement || professionalDetails.serviceDetails?.bankStatement || "",
-},
+        serviceDetails: {
+          ...(professionalDetails.serviceDetails || {}),
+          fullNameOfCompany: professionalDetails.serviceDetails?.fullNameOfCompany || "",
+          addressOfCompany: professionalDetails.serviceDetails?.addressOfCompany || "",
+          department: professionalDetails.serviceDetails?.department || "",
+          monthlyIncome: professionalDetails.serviceDetails?.monthlyIncome || "",
+          designation: professionalDetails.serviceDetails?.designation || "",
+          dateOfJoining: professionalDetails.serviceDetails?.dateOfJoining || "",
+          employeeCode: professionalDetails.serviceDetails?.employeeCode || "",
+          dateOfRetirement: professionalDetails.serviceDetails?.dateOfRetirement || "",
+          officeNo: professionalDetails.serviceDetails?.officeNo || "",
+          idCard: uploadedFiles.idCard || professionalDetails.serviceDetails?.idCard || "",
+          monthlySlip: uploadedFiles.monthlySlip || professionalDetails.serviceDetails?.monthlySlip || "",
+          bankStatement: uploadedFiles.bankStatement || professionalDetails.serviceDetails?.bankStatement || "",
+        },
 
 
-inCaseOfBusiness: professionalDetails.inCaseOfBusiness || false,
-businessDetails: {
-...(professionalDetails.businessDetails || {}),
-fullNameOfCompany: professionalDetails.businessDetails?.fullNameOfCompany || "",
-addressOfCompany: professionalDetails.businessDetails?.addressOfCompany || "",
-gstNumber: professionalDetails.businessDetails?.gstNumber || "",
-businessStructure: professionalDetails.businessDetails?.businessStructure || "",
-gstCertificate:
-uploadedFiles.gstCertificate || professionalDetails.businessDetails?.gstCertificate || "",
-},
-},
+        inCaseOfBusiness: professionalDetails.inCaseOfBusiness || false,
+        businessDetails: {
+          ...(professionalDetails.businessDetails || {}),
+          fullNameOfCompany: professionalDetails.businessDetails?.fullNameOfCompany || "",
+          addressOfCompany: professionalDetails.businessDetails?.addressOfCompany || "",
+          gstNumber: professionalDetails.businessDetails?.gstNumber || "",
+          businessStructure: professionalDetails.businessDetails?.businessStructure || "",
+          gstCertificate:
+            uploadedFiles.gstCertificate || professionalDetails.businessDetails?.gstCertificate || "",
+        },
+      },
 
       loanDetails: Array.isArray(loanDetails) ? loanDetails : [],
       referenceDetails: Array.isArray(referenceDetails)
         ? referenceDetails
         : referenceDetails
-        ? [referenceDetails]
-        : [],
+          ? [referenceDetails]
+          : [],
       guaranteeDetails,
     };
 
@@ -421,7 +421,7 @@ export const getMissingFieldsForMember = async (req, res) => {
         aadhaarNoPhoto: "",
         voterIdPhoto: "",
         passportNoPhoto: "",
-        signedPhoto:"",
+        signedPhoto: "",
       },
       professionalDetails: {
         qualification: "",
