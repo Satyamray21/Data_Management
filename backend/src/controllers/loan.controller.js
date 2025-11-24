@@ -1,9 +1,7 @@
 import Loan from "../models/loan.model.js";
 import Member from "../models/members.model.js";
 
-// =============================
-// Helper → Get Surety Data
-// =============================
+
 const getSuretyData = async (membershipNo, pdc = []) => {
     const m = await Member.findOne({
         "personalDetails.membershipNumber": membershipNo,
@@ -20,9 +18,6 @@ const getSuretyData = async (membershipNo, pdc = []) => {
     };
 };
 
-// =============================
-// CREATE LOAN
-// =============================
 export const createLoan = async (req, res) => {
     try {
         const {
@@ -93,9 +88,7 @@ export const createLoan = async (req, res) => {
     }
 };
 
-// =============================
-// GET ALL LOANS
-// =============================
+
 export const getAllLoans = async (req, res) => {
     try {
         const loans = await Loan.find()
@@ -108,9 +101,7 @@ export const getAllLoans = async (req, res) => {
     }
 };
 
-// =============================
-// GET SINGLE LOAN
-// =============================
+
 export const getLoanById = async (req, res) => {
     try {
         const loan = await Loan.findById(req.params.id)
@@ -126,9 +117,7 @@ export const getLoanById = async (req, res) => {
     }
 };
 
-// =============================
-// UPDATE LOAN (with Surety)
-// =============================
+
 export const updateLoan = async (req, res) => {
     try {
         const {
@@ -179,9 +168,7 @@ export const updateLoan = async (req, res) => {
     }
 };
 
-// =============================
-// DELETE LOAN
-// =============================
+
 export const deleteLoan = async (req, res) => {
     try {
         const loan = await Loan.findByIdAndDelete(req.params.id);
@@ -202,9 +189,7 @@ export const deleteLoan = async (req, res) => {
     }
 };
 
-// =============================
-// GET LOANS BY MEMBER MEMBERSHIP NUMBER
-// =============================
+
 export const getLoansByMemberId = async (req, res) => {
     try {
         const { membershipNumber } = req.params;
