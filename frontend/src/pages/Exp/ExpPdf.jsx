@@ -1,6 +1,6 @@
 import React,{useEffect} from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getGuarantorRelationsByMember } from "../../../../features/loan/loanSlice";
+import { getGuarantorRelationsByMember } from "../../features/loan/loanSlice";
 const ExpPdf = ({search}) => {
     const dispatch = useDispatch();
 
@@ -76,9 +76,7 @@ const ExpPdf = ({search}) => {
   };
 
   // Now you can pass reportData to jsPDF or return UI
-  return (
-    <pre>{JSON.stringify(reportData, null, 2)}</pre>
-  );
+ 
 
 
   const handleDownloadPdf = () => {
@@ -234,7 +232,7 @@ const ExpPdf = ({search}) => {
         </table>
 
         <div class="page-info">
-          ${reportData.pageInfo.date} ${reportData.pageInfo.page}
+          Generated on: ${reportData.reportInfo.date}
         </div>
 
         <script>

@@ -19,6 +19,7 @@ import LoanForm from '../pages/Loan/LoanForm.jsx';
 import PDCDetails from '../pages/Loan/PdcDetail.jsx';
 import LoanView from '../pages/Loan/LoanView.jsx';
 import LoanCreationWizard from '../pages/Loan/LoanCreationWizard.jsx';
+import ExpPdf from "../pages/Exp/ExpPdf";  
 
 const MainRoutes = () => {
   return (
