@@ -239,8 +239,9 @@ export const getGuarantorRelationsByMember = async (req, res) => {
         amountOfLoan: loan.loanAmount,
         typeOfLoan: loan.typeOfLoan,
         loanDate: loan.loanDate,
-        accountType:g.accountType,
-        accountNumber:g.accountNumber,
+        accountType:loan.accountType,
+        accountNumber:loan.accountNumber,
+        fileNumber:loan.fileNumber,
 
       }))
     );
