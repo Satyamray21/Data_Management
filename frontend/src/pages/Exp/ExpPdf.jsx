@@ -45,7 +45,7 @@ const ExpPdf = ({search}) => {
       accountNo: memberInfo.membershipNumber,
       name: memberInfo.name,
       address: memberInfo.address || "N/A",
-      mobileNo: memberInfo.mobileNumber || "N/A",
+      mobileNo: memberInfo.phoneNo || "N/A",
     },
 
     suretyGiven: suretyGiven?.map((item) => ({

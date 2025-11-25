@@ -12,7 +12,10 @@ const guarantorSchema = new mongoose.Schema(
         memberName: { type: String, required: true },
         membershipNumber: { type: String, required: true },
         mobileNumber: { type: String, required: true },
-
+        address:{type:String},
+        fileNumber:{type:String},
+        accountType:{type:String},
+        accountNumber:{type:String},
         // GUARANTOR'S OWN PDC
         pdcDetails: {
             type: [pdcSchema],

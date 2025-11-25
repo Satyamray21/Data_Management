@@ -103,7 +103,11 @@ const LoanCreationWizard = () => {
             memberId: g.memberId,
             memberName: g.fullName,
             membershipNumber: g.membershipNumber,
-            mobileNumber: g.mobileNumber
+            mobileNumber: g.mobileNumber,
+            accountType:g.accountType,
+            accountNumber:g.accountNumber,
+            fileNumber:g.fileNumber,
+            address:g.address
         }))
         : [],
 
@@ -159,7 +163,7 @@ const LoanCreationWizard = () => {
         finalPayload.lafDate = loanFormData.lafDate;
         finalPayload.lafAmount = loanFormData.lafAmount;
         finalPayload.fdrAmount = loanFormData.fdrAmount;
-        finalPayload.fdrSchema = loanFormData.fdrScheme;
+        finalPayload.fdrScheme = loanFormData.fdrScheme;
     }
 
     console.log("🚀 FINAL PAYLOAD TO BE SENT:", JSON.stringify(finalPayload, null, 2));

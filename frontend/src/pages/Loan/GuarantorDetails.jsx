@@ -147,7 +147,11 @@ const GuarantorDetails = ({ loanFormData, onGuarantorSubmit, guarantorDetails })
         membershipNumber: g.membershipNumber,
         fullName: g.name,
         mobileNumber: g.mobileNumber,
-        address: g.address
+        address: g.address,
+        fileNumber:g.fileNumber,
+        accountType:g.accountType,
+        accountNumber:g.accountNumber
+
     }))
 });
 

@@ -239,6 +239,9 @@ export const getGuarantorRelationsByMember = async (req, res) => {
         amountOfLoan: loan.loanAmount,
         typeOfLoan: loan.typeOfLoan,
         loanDate: loan.loanDate,
+        accountType:g.accountType,
+        accountNumber:g.accountNumber,
+
       }))
     );
 
@@ -269,6 +272,7 @@ export const getGuarantorRelationsByMember = async (req, res) => {
         amountOfLoan: loan.loanAmount,
         typeOfLoan: loan.typeOfLoan,
         loanDate: loan.loanDate,
+        address:loan.address,
       });
     }
 
@@ -278,6 +282,14 @@ export const getGuarantorRelationsByMember = async (req, res) => {
       member: {
         _id: member._id,
         name: member.personalDetails.nameOfMember,
+       address: member.addressDetails?.permanentAddress
+  ? `${member.addressDetails.permanentAddress.flatHouseNo}, 
+     ${member.addressDetails.permanentAddress.locality},
+     ${member.addressDetails.permanentAddress.city} - 
+     ${member.addressDetails.permanentAddress.pincode}`
+  : "N/A",
+
+        phoneNo:member.personalDetails.phoneNo,
         membershipNumber,
       },
       myGuarantors,
