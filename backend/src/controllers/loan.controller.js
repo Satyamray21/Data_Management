@@ -155,3 +155,139 @@ export const deleteLoan = async (req, res) => {
     });
   }
 };
+
+
+/* ---------------------------------------------------------------------------
+ * GET SURETY SUMMARY FOR A MEMBER
+ * -------------------------------------------------------------------------*/
+export const getSuretySummaryByMember = async (req, res) => {
+  try {
+    const { membershipNumber } = req.params;
+
+    // All loans where this member has GIVEN surety
+    const suretyGiven = await Loan.find({
+      suretyGiven: {
+        $elemMatch: { membershipNumber }
+      }
+    });
+
+    // All loans where this member has TAKEN surety
+    const suretyTaken = await Loan.find({
+      suretyTaken: {
+        $elemMatch: { membershipNumber }
+      }
+    });
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          membershipNumber,
+          suretyGiven,
+          suretyTaken
+        },
+        "Surety summary fetched successfully"
+      )
+    );
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+
+/* ---------------------------------------------------------------------------
+ * GET GUARANTOR RELATION SUMMARY FOR A MEMBER (Loan Based)
+ * -------------------------------------------------------------------------*/
+export const getGuarantorRelationsByMember = async (req, res) => {
+  try {
+    const { search } = req.query;
+
+    if (!search) {
+      return res.status(400).json({
+        success: false,
+        message: "Provide membershipNumber or name in 'search' query.",
+      });
+    }
+
+    // 1️⃣ Find member
+    const member = await Member.findOne({
+      $or: [
+        { "personalDetails.fullName": { $regex: search, $options: "i" } },
+        { "personalDetails.membershipNumber": search },
+      ],
+    }).lean();
+
+    if (!member) {
+      return res.status(404).json({ success: false, message: "Member not found." });
+    }
+
+    const membershipNumber = member.personalDetails.membershipNumber;
+    const memberId = member._id.toString();
+
+    // 2️⃣ Loans taken BY ME → myGuarantors
+    const myLoans = await Loan.find({ membershipNumber }).lean();
+
+    const myGuarantors = myLoans.flatMap((loan) =>
+      (loan.suretyGiven || []).map((g) => ({
+        loanId: loan._id,
+        name: g.memberName,
+        membershipNumber: g.membershipNumber,
+        mobileNumber: g.mobileNumber,
+        amountOfLoan: loan.loanAmount,
+        typeOfLoan: loan.typeOfLoan,
+        loanDate: loan.loanDate,
+      }))
+    );
+
+    // 3️⃣ Loans where I am the guarantor → forWhomIAmGuarantor
+    const loansWhereIGaveSurety = await Loan.find({
+      $or: [
+        { "suretyGiven.membershipNumber": membershipNumber },
+        { "suretyGiven.memberId": memberId }
+      ]
+    }).lean();
+
+    const forWhomIAmGuarantor = [];
+
+    for (let loan of loansWhereIGaveSurety) {
+      const borrower = await Member.findOne({
+        "personalDetails.membershipNumber": loan.membershipNumber,
+      }).lean();
+
+      forWhomIAmGuarantor.push({
+        loanId: loan._id,
+        name: borrower?.personalDetails?.fullName || "Unknown Borrower",
+        membershipNumber: loan.membershipNumber,
+        mobileNumber: borrower?.personalDetails?.mobileNumber || "",
+        amountOfLoan: loan.loanAmount,
+        typeOfLoan: loan.typeOfLoan,
+        loanDate: loan.loanDate,
+      });
+    }
+
+    // 4️⃣ Response
+    return res.status(200).json({
+      success: true,
+      member: {
+        _id: member._id,
+        name: member.personalDetails.fullName,
+        membershipNumber,
+      },
+      myGuarantors,
+      forWhomIAmGuarantor,
+    });
+
+  } catch (error) {
+    console.error("❌ getGuarantorRelationsByMember ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+

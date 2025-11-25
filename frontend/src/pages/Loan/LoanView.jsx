@@ -576,7 +576,7 @@ const LoanView = () => {
                             variant="contained"
                             onClick={handleAddNewLoan}
                             startIcon={<Add />}
-                            disabled={!selectedMember}
+                           
                         >
                             Create New Loan
                         </Button>

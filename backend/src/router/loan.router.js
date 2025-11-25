@@ -5,6 +5,8 @@ import {
     getLoanById,
     updateLoan,
     deleteLoan,
+    getSuretySummaryByMember,
+    getGuarantorRelationsByMember
     //getLoansByMemberId,
 } from "../controllers/loan.controller.js";
 
@@ -15,6 +17,8 @@ router.post("/", createLoan);
 
 // Get All Loans
 router.get("/", getAllLoans);
+router.get("/surety-summary/:membershipNumber", getSuretySummaryByMember);
+router.get("/guarantor-relations", getGuarantorRelationsByMember);
 
 // Get Loan by ID
 router.get("/:id", getLoanById);
