@@ -2,7 +2,6 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "../../utils/axios";
 
 
-
 // =============================
 // CREATE LOAN
 // =============================
@@ -86,12 +85,29 @@ export const deleteLoan = createAsyncThunk(
     async (id, { rejectWithValue }) => {
         try {
             await axios.delete(`/loans/${id}`);
-            return id; // return deleted id
+            return id;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || error.message);
         }
     }
 );
+
+
+// =====================================================
+// ⭐ NEW API: GET GUARANTOR RELATION (my guarantors + whom I guaranteed)
+// =====================================================
+export const getGuarantorRelationsByMember = createAsyncThunk(
+    "loan/getGuarantorRelationsByMember",
+    async (search, { rejectWithValue }) => {
+        try {
+            const response = await axios.get(`/loans/guarantor-relations?search=${search}`);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || error.message);
+        }
+    }
+);
+
 
 // =============================
 // SLICE
@@ -102,7 +118,9 @@ const loanSlice = createSlice({
         loans: [],
         singleLoan: null,
         memberLoans: [],
+        guarantorRelations: null,   // ⭐ added
         loading: false,
+        guarantorLoading: false,    // ⭐ added
         error: null,
         success: false,
     },
@@ -196,6 +214,19 @@ const loanSlice = createSlice({
             })
             .addCase(deleteLoan.rejected, (state, action) => {
                 state.loading = false;
+                state.error = action.payload;
+            })
+
+            // ⭐ NEW: GUARANTOR RELATIONS
+            .addCase(getGuarantorRelationsByMember.pending, (state) => {
+                state.guarantorLoading = true;
+            })
+            .addCase(getGuarantorRelationsByMember.fulfilled, (state, action) => {
+                state.guarantorLoading = false;
+                state.guarantorRelations = action.payload;
+            })
+            .addCase(getGuarantorRelationsByMember.rejected, (state, action) => {
+                state.guarantorLoading = false;
                 state.error = action.payload;
             });
     },

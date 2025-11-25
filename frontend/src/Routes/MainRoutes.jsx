@@ -41,6 +41,8 @@ const MainRoutes = () => {
         <Route path="/member/view/:id" element={<MemberViewPage />} />
         <Route path="/member/edit/:id" element={<MemberEditPage />} />
         <Route path="/notice" element={<NoticePage />} />
+       <Route path="/exppdf" element={<ExpPdf search="12345" />} />
+
       </Route>
     </Routes>
   )
