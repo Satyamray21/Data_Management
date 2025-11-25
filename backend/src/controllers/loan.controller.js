@@ -212,10 +212,10 @@ export const getGuarantorRelationsByMember = async (req, res) => {
       });
     }
 
-    // 1️⃣ Find member
+    // 1️⃣ Find the requested member
     const member = await Member.findOne({
       $or: [
-        { "personalDetails.fullName": { $regex: search, $options: "i" } },
+        { "personalDetails.nameOfMember": { $regex: search, $options: "i" } },
         { "personalDetails.membershipNumber": search },
       ],
     }).lean();
@@ -242,7 +242,7 @@ export const getGuarantorRelationsByMember = async (req, res) => {
       }))
     );
 
-    // 3️⃣ Loans where I am the guarantor → forWhomIAmGuarantor
+    // 3️⃣ Loans where I AM guarantor
     const loansWhereIGaveSurety = await Loan.find({
       $or: [
         { "suretyGiven.membershipNumber": membershipNumber },
@@ -253,27 +253,31 @@ export const getGuarantorRelationsByMember = async (req, res) => {
     const forWhomIAmGuarantor = [];
 
     for (let loan of loansWhereIGaveSurety) {
+      // borrower fetched using correct schema fields
       const borrower = await Member.findOne({
         "personalDetails.membershipNumber": loan.membershipNumber,
       }).lean();
 
+      const borrowerName = borrower?.personalDetails?.nameOfMember;
+      const borrowerMobile = borrower?.personalDetails?.phoneNo;
+
       forWhomIAmGuarantor.push({
         loanId: loan._id,
-        name: borrower?.personalDetails?.fullName || "Unknown Borrower",
+        name: borrowerName || "Unknown Borrower",
         membershipNumber: loan.membershipNumber,
-        mobileNumber: borrower?.personalDetails?.mobileNumber || "",
+        mobileNumber: borrowerMobile || "",
         amountOfLoan: loan.loanAmount,
         typeOfLoan: loan.typeOfLoan,
         loanDate: loan.loanDate,
       });
     }
 
-    // 4️⃣ Response
+    // 4️⃣ Send response
     return res.status(200).json({
       success: true,
       member: {
         _id: member._id,
-        name: member.personalDetails.fullName,
+        name: member.personalDetails.nameOfMember,
         membershipNumber,
       },
       myGuarantors,
@@ -281,7 +285,7 @@ export const getGuarantorRelationsByMember = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ getGuarantorRelationsByMember ERROR:", error);
+    console.error("❌ ERROR in getGuarantorRelationsByMember:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -289,5 +293,8 @@ export const getGuarantorRelationsByMember = async (req, res) => {
     });
   }
 };
+
+
+
 
 
