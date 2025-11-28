@@ -4,7 +4,7 @@ import * as XLSX from "xlsx";
 
 // Field mapping (moved from MemberDetails)
 export const FIELD_MAP = {
-    // Personal
+    // Personal - Combined title and name
     "personalDetails.titleCombinedName": "Member Name",
     "personalDetails.membershipNumber": "Membership No",
     "personalDetails.membershipDate": "Membership Date",
@@ -22,29 +22,19 @@ export const FIELD_MAP = {
     "personalDetails.emailId": "Email",
     "personalDetails.nameOfSpouse": "Spouse's Name",
     "personalDetails.amountInCredit": "Amount In Credit",
-  
 
     // Address
     "addressDetails.permanentAddress": "Permanent Address",
-   // "addressDetails.permanentAddressBillPhoto": "Permanent Address Bill Photo",
     "addressDetails.currentResidentalAddress": "Current Address",
-   // "addressDetails.currentResidentalBillPhoto": "Current Address Bill Photo",
     "addressDetails.previousCurrentAddress": "Previous Addresses",
-
 
     // Documents - Text Fields
     "documents.panNo": "PAN No",
-    //"documents.panNoPhoto": "PAN Card Photo",
     "documents.rationCard": "Ration Card",
-    //"documents.rationCardPhoto": "Ration Card Photo",
     "documents.drivingLicense": "Driving License",
-   // "documents.drivingLicensePhoto": "Driving License Photo",
     "documents.aadhaarNo": "Aadhaar No",
-    //"documents.aadhaarNoPhoto": "Aadhaar Card Photo",
     "documents.voterId": "Voter ID",
-    //"documents.voterIdPhoto": "Voter ID Photo",
     "documents.passportNo": "Passport No",
-    //"documents.passportNoPhoto": "Passport Photo",
 
     // Professional - Basic
     "professionalDetails.qualification": "Qualification",
@@ -97,31 +87,6 @@ export const CATEGORY_MAP = {
 };
 
 // Helper functions
-export const getValueByPath = (obj, path) => {
-    if (!path || !obj) return undefined;
-    const parts = path.split(".");
-    let cur = obj;
-    for (const p of parts) {
-        if (cur === undefined || cur === null) return undefined;
-        cur = cur[p];
-    }
-    return cur;
-};
-
-
-export const isMissing = (value) => {
-    if (value === undefined || value === null) return true;
-    if (typeof value === "string") return value.trim() === "";
-    if (Array.isArray(value)) return value.length === 0;
-    if (typeof value === "object") {
-        if (Object.keys(value).length === 0) return true;
-        return Object.values(value).every(val =>
-            val === undefined || val === null || val === "" ||
-            (typeof val === 'object' && Object.keys(val).length === 0)
-        );
-    }
-    return false;
-};
 
 // Format date to DD/MM/YYYY
 const formatDate = (dateValue) => {
@@ -172,67 +137,110 @@ const formatAddressValue = (addressObj) => {
     }
 };
 
-export const formatValuePlain = (value, fieldKey) => {
+// Update the formatValuePlain function to handle the virtual field properly
+export const formatValuePlain = (value, fieldKey, member) => {
     if (value === undefined || value === null) return "";
 
+    // Special case: Title + Name merge - handle this virtual field
     if (fieldKey === "personalDetails.titleCombinedName") {
-        const title = getValueByPath(member, "personalDetails.title") || "";
-        const name = getValueByPath(member, "personalDetails.nameOfMember") || "";
-        
-        if (title && name) {
-            return `${title} ${name}`;
-        } else if (name) {
-            return name;
-        } else if (title) {
-            return title;
-        }
-        return "";
+        const title = member?.personalDetails?.title || "";
+        const name = member?.personalDetails?.nameOfMember || "";
+        const combined = `${title} ${name}`.trim();
+        return combined || "—";
     }
-    
-    // Handle address fields specifically - format without keys
-    if (fieldKey === "addressDetails.permanentAddress" || 
-        fieldKey === "addressDetails.currentResidentalAddress") {
+
+    // Address fields
+    if (
+        fieldKey === "addressDetails.permanentAddress" ||
+        fieldKey === "addressDetails.currentResidentalAddress"
+    ) {
         return formatAddressValue(value);
     }
-    
-    // Handle date fields specifically
-    if (fieldKey === "personalDetails.dateOfBirth" || 
+
+    // Date fields
+    if (
+        fieldKey === "personalDetails.dateOfBirth" ||
         fieldKey === "personalDetails.membershipDate" ||
         fieldKey === "professionalDetails.serviceDetails.dateOfJoining" ||
-        fieldKey === "professionalDetails.serviceDetails.dateOfRetirement") {
+        fieldKey === "professionalDetails.serviceDetails.dateOfRetirement"
+    ) {
         return formatDate(value);
     }
-    
+
+    // Boolean
     if (typeof value === "boolean") return value ? "Yes" : "No";
+
+    // Array
     if (Array.isArray(value)) {
         if (value.length === 0) return "";
         if (typeof value[0] === "object") {
-            return value.map(v => {
-                try { 
-                    return Object.entries(v).map(([k, val]) => `${k}: ${formatValuePlain(val)}`).join("; "); 
-                } catch { 
-                    return JSON.stringify(v); 
-                }
-            }).join(" | ");
+            return value
+                .map(v =>
+                    Object.entries(v)
+                        .map(([k, val]) => `${k}: ${formatValuePlain(val, k, member)}`)
+                        .join("; ")
+                )
+                .join(" | ");
         }
         return value.join(", ");
     }
+
+    // Object
     if (typeof value === "object") {
-        try {
-            return Object.entries(value).map(([k, v]) => `${k}: ${formatValuePlain(v)}`).join("; ");
-        } catch {
-            return JSON.stringify(value);
-        }
+        return Object.entries(value)
+            .map(([k, v]) => `${k}: ${formatValuePlain(v, k, member)}`)
+            .join("; ");
     }
-    if (typeof value === "string") {
-        if (value.startsWith("http") || value.includes("cloudinary")) {
-            return value;
-        }
-        return value;
-    }
+
     return String(value);
 };
 
+// Update the getValueByPath function to handle virtual fields
+export const getValueByPath = (obj, path) => {
+    if (!path || !obj) return undefined;
+    
+    // Handle virtual fields
+    if (path === "personalDetails.titleCombinedName") {
+        const title = getValueByPath(obj, "personalDetails.title") || "";
+        const name = getValueByPath(obj, "personalDetails.nameOfMember") || "";
+        const combined = `${title} ${name}`.trim();
+        return combined || undefined;
+    }
+    
+    const parts = path.split(".");
+    let cur = obj;
+    for (const p of parts) {
+        if (cur === undefined || cur === null) return undefined;
+        cur = cur[p];
+    }
+    return cur;
+};
+
+// Update the isMissing function to handle the virtual field
+export const isMissing = (value) => {
+    if (value === undefined || value === null) return true;
+    if (typeof value === "string") return value.trim() === "";
+    if (Array.isArray(value)) return value.length === 0;
+    if (typeof value === "object") {
+        if (Object.keys(value).length === 0) return true;
+        return Object.values(value).every(val =>
+            val === undefined || val === null || val === "" ||
+            (typeof val === 'object' && Object.keys(val).length === 0)
+        );
+    }
+    return false;
+};
+
+export const getMemberFullName = (member) => {
+    const title = getValueByPath(member, "personalDetails.title") || "";
+    const name = getValueByPath(member, "personalDetails.nameOfMember") || "";
+
+    if (title && name) return `${title} ${name}`;
+    if (name) return name;
+    if (title) return title;
+
+    return "Member";
+};
 
 export const getOccupationType = (member) => {
     const prof = getValueByPath(member, "professionalDetails") || {};
@@ -389,7 +397,8 @@ export const generateMemberFieldsPDF = async (member, category, viewType = "all"
     if (!member) return;
     
     const doc = new jsPDF();
-    const memberName = getValueByPath(member, "personalDetails.titleCombinedName") || "Member";
+    const memberName = getMemberFullName(member);
+
     const membershipNumber = getValueByPath(member, "personalDetails.membershipNumber") || "N/A";
     
     const categoryDisplay = category === "all" ? "All Fields" : 
@@ -425,11 +434,22 @@ export const generateMemberFieldsPDF = async (member, category, viewType = "all"
         
         // Prepare table data with serial numbers starting from 1 for each category
         const body = fields.map((key, idx) => {
-            const raw = getValueByPath(member, key);
+            let displayValue;
+            
+            // Handle virtual field specially
+            if (key === "personalDetails.titleCombinedName") {
+                const title = getValueByPath(member, "personalDetails.title") || "";
+                const name = getValueByPath(member, "personalDetails.nameOfMember") || "";
+                displayValue = `${title} ${name}`.trim() || "—";
+            } else {
+                const raw = getValueByPath(member, key);
+                displayValue = formatValuePlain(raw, key, member) || "—";
+            }
+            
             return [
                 idx + 1, // Serial number starting from 1 for each category
                 FIELD_MAP[key] || key,
-                formatValuePlain(raw, key) || "—"
+                displayValue
             ];
         });
 
@@ -558,11 +578,22 @@ export const generateMemberFieldsPDF = async (member, category, viewType = "all"
         
         if (fields.length > 0) {
             const body = fields.map((key, idx) => {
-                const raw = getValueByPath(member, key);
+                let displayValue;
+                
+                // Handle virtual field specially
+                if (key === "personalDetails.titleCombinedName") {
+                    const title = getValueByPath(member, "personalDetails.title") || "";
+                    const name = getValueByPath(member, "personalDetails.nameOfMember") || "";
+                    displayValue = `${title} ${name}`.trim() || "—";
+                } else {
+                    const raw = getValueByPath(member, key);
+                    displayValue = formatValuePlain(raw, key, member) || "—";
+                }
+                
                 return [
                     idx + 1,
                     FIELD_MAP[key] || key,
-                    formatValuePlain(raw, key) || "—"
+                    displayValue
                 ];
             });
 
