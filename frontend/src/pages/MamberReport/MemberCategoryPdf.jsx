@@ -8,8 +8,8 @@ export const FIELD_MAP = {
     "personalDetails.titleCombinedName": "Member Name",
     "personalDetails.membershipNumber": "Membership No",
     "personalDetails.membershipDate": "Membership Date",
-    "personalDetails.nameOfFather": "Father's Name",
-    "personalDetails.nameOfMother": "Mother's Name",
+    "personalDetails.fatherCombinedName": "Father's Name",
+    "personalDetails.motherCombinedName": "Mother's Name",
     "personalDetails.dateOfBirth": "Date of Birth",
     "personalDetails.ageInYears": "Age (Years)",
     "personalDetails.minor": "Is Minor",
@@ -141,10 +141,24 @@ const formatAddressValue = (addressObj) => {
 export const formatValuePlain = (value, fieldKey, member) => {
     if (value === undefined || value === null) return "";
 
-    // Special case: Title + Name merge - handle this virtual field
+    // Special case: Title + Name merge - handle virtual fields
     if (fieldKey === "personalDetails.titleCombinedName") {
         const title = member?.personalDetails?.title || "";
         const name = member?.personalDetails?.nameOfMember || "";
+        const combined = `${title} ${name}`.trim();
+        return combined || "—";
+    }
+
+    if (fieldKey === "personalDetails.fatherCombinedName") {
+        const title = member?.personalDetails?.fatherTitle || "";
+        const name = member?.personalDetails?.nameOfFather || "";
+        const combined = `${title} ${name}`.trim();
+        return combined || "—";
+    }
+
+    if (fieldKey === "personalDetails.motherCombinedName") {
+        const title = member?.personalDetails?.motherTitle || "";
+        const name = member?.personalDetails?.nameOfMother || "";
         const combined = `${title} ${name}`.trim();
         return combined || "—";
     }
@@ -203,6 +217,20 @@ export const getValueByPath = (obj, path) => {
     if (path === "personalDetails.titleCombinedName") {
         const title = getValueByPath(obj, "personalDetails.title") || "";
         const name = getValueByPath(obj, "personalDetails.nameOfMember") || "";
+        const combined = `${title} ${name}`.trim();
+        return combined || undefined;
+    }
+
+    if (path === "personalDetails.fatherCombinedName") {
+        const title = getValueByPath(obj, "personalDetails.fatherTitle") || "";
+        const name = getValueByPath(obj, "personalDetails.nameOfFather") || "";
+        const combined = `${title} ${name}`.trim();
+        return combined || undefined;
+    }
+
+    if (path === "personalDetails.motherCombinedName") {
+        const title = getValueByPath(obj, "personalDetails.motherTitle") || "";
+        const name = getValueByPath(obj, "personalDetails.nameOfMother") || "";
         const combined = `${title} ${name}`.trim();
         return combined || undefined;
     }
@@ -436,10 +464,18 @@ export const generateMemberFieldsPDF = async (member, category, viewType = "all"
         const body = fields.map((key, idx) => {
             let displayValue;
             
-            // Handle virtual field specially
+            // Handle virtual fields specially
             if (key === "personalDetails.titleCombinedName") {
                 const title = getValueByPath(member, "personalDetails.title") || "";
                 const name = getValueByPath(member, "personalDetails.nameOfMember") || "";
+                displayValue = `${title} ${name}`.trim() || "—";
+            } else if (key === "personalDetails.fatherCombinedName") {
+                const title = getValueByPath(member, "personalDetails.fatherTitle") || "";
+                const name = getValueByPath(member, "personalDetails.nameOfFather") || "";
+                displayValue = `${title} ${name}`.trim() || "—";
+            } else if (key === "personalDetails.motherCombinedName") {
+                const title = getValueByPath(member, "personalDetails.motherTitle") || "";
+                const name = getValueByPath(member, "personalDetails.nameOfMother") || "";
                 displayValue = `${title} ${name}`.trim() || "—";
             } else {
                 const raw = getValueByPath(member, key);
@@ -580,10 +616,18 @@ export const generateMemberFieldsPDF = async (member, category, viewType = "all"
             const body = fields.map((key, idx) => {
                 let displayValue;
                 
-                // Handle virtual field specially
+                // Handle virtual fields specially
                 if (key === "personalDetails.titleCombinedName") {
                     const title = getValueByPath(member, "personalDetails.title") || "";
                     const name = getValueByPath(member, "personalDetails.nameOfMember") || "";
+                    displayValue = `${title} ${name}`.trim() || "—";
+                } else if (key === "personalDetails.fatherCombinedName") {
+                    const title = getValueByPath(member, "personalDetails.fatherTitle") || "";
+                    const name = getValueByPath(member, "personalDetails.nameOfFather") || "";
+                    displayValue = `${title} ${name}`.trim() || "—";
+                } else if (key === "personalDetails.motherCombinedName") {
+                    const title = getValueByPath(member, "personalDetails.motherTitle") || "";
+                    const name = getValueByPath(member, "personalDetails.nameOfMother") || "";
                     displayValue = `${title} ${name}`.trim() || "—";
                 } else {
                     const raw = getValueByPath(member, key);
