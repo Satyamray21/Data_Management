@@ -6,8 +6,6 @@ import * as XLSX from "xlsx";
 export const FIELD_MAP = {
     // Personal - Combined title and name
     "personalDetails.titleCombinedName": "Member Name",
-    "personalDetails.membershipNumber": "Membership No",
-    "personalDetails.membershipDate": "Membership Date",
     "personalDetails.fatherCombinedName": "Father's Name",
     "personalDetails.motherCombinedName": "Mother's Name",
     "personalDetails.dateOfBirth": "Date of Birth",
@@ -15,13 +13,19 @@ export const FIELD_MAP = {
     "personalDetails.minor": "Is Minor",
     "personalDetails.gender": "Gender",
     "personalDetails.religion": "Religion",
+     "personalDetails.caste": "Caste",
     "personalDetails.maritalStatus": "Marital Status",
-    "personalDetails.caste": "Caste",
+    "personalDetails.membershipDate": "Membership Date",
+    "personalDetails.membershipNumber": "Membership No",
+    
+     "personalDetails.amountInCredit": "Amount In Credit",
+    
+   
     "personalDetails.phoneNo": "Phone No",
     "personalDetails.alternatePhoneNo": "Alternate Phone",
     "personalDetails.emailId": "Email",
     "personalDetails.nameOfSpouse": "Spouse's Name",
-    "personalDetails.amountInCredit": "Amount In Credit",
+   
 
     // Address
     "addressDetails.permanentAddress": "Permanent Address",
@@ -67,7 +71,8 @@ export const FIELD_MAP = {
     // Family
     "familyDetails.familyMembersMemberOfSociety": "Family Members in Society",
     "familyDetails.familyMember": "Family Member Names",
-    "familyDetails.familyMemberNo": "Family Member Phones",
+    "familyDetails.familyMemberNo": "Family MemberShip Number",
+    "familyDetails.relationWithApplicant":"Relation With Applicant",
 
     // Nominee
     "nomineeDetails.nomineeName": "Nominee Name",
@@ -341,11 +346,23 @@ export const filterFieldsByOccupation = (fields, member) => {
 };
 
 // Get fields by category and view type
+
+// Get fields by category and view type with conditional logic
 export const getFieldsByCategory = (member, category, viewType = "all") => {
     const allKeys = Object.keys(FIELD_MAP);
     
+    // Filter out spouse name if marital status is not married
+    const filteredKeys = allKeys.filter(key => {
+        // Always include all fields except spouse name
+        if (key !== "personalDetails.nameOfSpouse") return true;
+        
+        // Only include spouse name if marital status is married
+        const maritalStatus = getValueByPath(member, "personalDetails.maritalStatus") || "";
+        return String(maritalStatus).toLowerCase() === "married";
+    });
+    
     if (category === "all") {
-        const filtered = allKeys.filter(key => {
+        const filtered = filteredKeys.filter(key => {
             const value = getValueByPath(member, key);
             const missing = isMissing(value);
             
@@ -360,7 +377,7 @@ export const getFieldsByCategory = (member, category, viewType = "all") => {
     }
     
     if (category === "filled") {
-        const filtered = allKeys.filter(key => {
+        const filtered = filteredKeys.filter(key => {
             const value = getValueByPath(member, key);
             return !isMissing(value);
         });
@@ -368,7 +385,7 @@ export const getFieldsByCategory = (member, category, viewType = "all") => {
     }
     
     if (category === "missing") {
-        const filtered = allKeys.filter(key => {
+        const filtered = filteredKeys.filter(key => {
             const value = getValueByPath(member, key);
             return isMissing(value);
         });
@@ -376,7 +393,7 @@ export const getFieldsByCategory = (member, category, viewType = "all") => {
     }
     
     // Specific category
-    const filtered = allKeys.filter(key => {
+    const filtered = filteredKeys.filter(key => {
         const value = getValueByPath(member, key);
         const missing = isMissing(value);
         const matchesCategory = key.startsWith(category);
