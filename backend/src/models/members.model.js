@@ -173,6 +173,7 @@ const memberSchema = new mongoose.Schema(
       familyMembersMemberOfSociety: { type: Boolean },
       familyMember: [{ type: String }],
       familyMemberNo: [{ type: String }],
+      relationWithApplicant: [{ type: String }],
     },
 
     // ===== BANK DETAILS =====
