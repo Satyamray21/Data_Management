@@ -432,26 +432,17 @@ const MemberDossierForm = () => {
 
       /* -----------------------------------------
          FAMILY DETAILS
-      ----------------------------------------- */
-      formDataToSend.append(
-        "familyDetails[familyMembersMemberOfSociety]",
-        pro.familyMemberMemberOfSociety ? "true" : "false"
-      );
+     /* -----------------------------------------
+   FAMILY DETAILS (Professional & Family)
+----------------------------------------- */
 
-      if (pro.familyMembers?.length) {
-        pro.familyMembers.forEach((mem, index) => {
-          if (mem.name)
-            formDataToSend.append(
-              `familyDetails[familyMember][${index}]`,
-              mem.name
-            );
-          if (mem.membershipNo)
-            formDataToSend.append(
-              `familyDetails[familyMemberNo][${index}]`,
-              mem.membershipNo
-            );
-        });
-      }
+// Send familyMember, familyMemberNo, relationWithApplicant
+values.professionalDetails.familyMembers.forEach((item, index) => {
+    formDataToSend.append(`familyDetails[familyMember][${index}]`, item.name);
+    formDataToSend.append(`familyDetails[familyMemberNo][${index}]`, item.membershipNo);
+    formDataToSend.append(`familyDetails[relationWithApplicant][${index}]`, item.relationWithApplicant);
+});
+
 
       /* -----------------------------------------
          LOAN DETAILS
