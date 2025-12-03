@@ -227,6 +227,7 @@ const memberSchema = new mongoose.Schema(
     nomineeDetails: {
       nomineeName: { type: String },
       relationWithApplicant: { type: String },
+      nomineeMobileNo:{type:String},
       introduceBy: { type: String },
       memberShipNo: { type: String },
     },

@@ -162,6 +162,7 @@ const MemberDossierForm = () => {
     nomineeDetails: {
       nomineeName: "",
       relationWithApplicant: "",
+      nomineeMobileNo:"",
       introduceBy: "",
       memberShipNo: "",
     },
@@ -174,7 +175,7 @@ const MemberDossierForm = () => {
       },
     ],
 
-    // Add financialDetails to initial form data
+    
     financialDetails: [{
       shareCapital: "",
       optionalDeposit: "",
