@@ -1,19 +1,22 @@
-import React,{useEffect} from "react";
+import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useParams } from "react-router-dom";
 import { getGuarantorRelationsByMember } from "../../features/loan/loanSlice";
-const ExpPdf = ({search}) => {
-    const dispatch = useDispatch();
+
+const ExpPdf = () => {
+  const dispatch = useDispatch();
+  const { membershipNumber } = useParams(); // Get membershipNumber from URL params
 
   const { guarantorRelations, guarantorLoading } = useSelector(
     (state) => state.loan
   );
 
-  // 🔥 Fetch data from API
+  // 🔥 Fetch data from API using route parameter
   useEffect(() => {
-    if (search) {
-      dispatch(getGuarantorRelationsByMember(search));
+    if (membershipNumber) {
+      dispatch(getGuarantorRelationsByMember(membershipNumber));
     }
-  }, [search, dispatch]);
+  }, [membershipNumber, dispatch]);
 
   // 📌 Show loader while fetching
   if (guarantorLoading) return <p>Loading...</p>;
@@ -74,10 +77,6 @@ const ExpPdf = ({search}) => {
       loanStatus: "",
     })),
   };
-
-  // Now you can pass reportData to jsPDF or return UI
- 
-
 
   const handleDownloadPdf = () => {
     const printWindow = window.open("", "_blank");
@@ -268,6 +267,6 @@ const ExpPdf = ({search}) => {
       </button>
     </div>
   );
-};          
+};
 
 export default ExpPdf;

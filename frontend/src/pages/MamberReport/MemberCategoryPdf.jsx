@@ -2,10 +2,11 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 
-// Field mapping (moved from MemberDetails)
 export const FIELD_MAP = {
     // Personal - Combined title and name
     "personalDetails.titleCombinedName": "Member Name",
+    "personalDetails.membershipDate": "Membership Date",
+    "personalDetails.membershipNumber": "Membership No",
     "personalDetails.fatherCombinedName": "Father's Name",
     "personalDetails.motherCombinedName": "Mother's Name",
     "personalDetails.dateOfBirth": "Date of Birth",
@@ -13,23 +14,19 @@ export const FIELD_MAP = {
     "personalDetails.minor": "Is Minor",
     "personalDetails.gender": "Gender",
     "personalDetails.religion": "Religion",
-     "personalDetails.caste": "Caste",
+    "personalDetails.caste": "Caste",
     "personalDetails.maritalStatus": "Marital Status",
-    "personalDetails.membershipDate": "Membership Date",
-    "personalDetails.membershipNumber": "Membership No",
-    
-     "personalDetails.amountInCredit": "Amount In Credit",
-    
-   
+
     "personalDetails.phoneNo": "Phone No",
     "personalDetails.alternatePhoneNo": "Alternate Phone",
-    "personalDetails.emailId": "Email",
+    "personalDetails.landlineNo": "Landline No",
+    "personalDetails.emailId": "Email 1",
+    "personalDetails.emailId2": "Email 2",
     "personalDetails.nameOfSpouse": "Spouse's Name",
-   
 
     // Address
-    "addressDetails.permanentAddress": "Permanent Address",
     "addressDetails.currentResidentalAddress": "Current Address",
+    "addressDetails.permanentAddress": "Permanent Address",
     "addressDetails.previousCurrentAddress": "Previous Addresses",
 
     // Documents - Text Fields
@@ -43,12 +40,10 @@ export const FIELD_MAP = {
     // Professional - Basic
     "professionalDetails.qualification": "Qualification",
     "professionalDetails.occupation": "Occupation",
-    "professionalDetails.degreeNumber": "Degree Number",
+    "professionalDetails.degreeNumber": "Certificate of Membership",
 
     // Professional - Employment Type
     "professionalDetails.inCaseOfServiceGovt": "Government Service",
-    "professionalDetails.inCaseOfPrivate": "Private Service",
-    "professionalDetails.inCaseOfService": "Service",
     "professionalDetails.serviceType": "Service Type",
 
     // Professional - Service Details
@@ -69,26 +64,25 @@ export const FIELD_MAP = {
     "professionalDetails.businessDetails.gstCertificate": "GST Certificate",
 
     // Family
-    "familyDetails.familyMembersMemberOfSociety": "Family Members in Society",
     "familyDetails.familyMember": "Family Member Names",
-    "familyDetails.familyMemberNo": "Family MemberShip Number",
-    "familyDetails.relationWithApplicant":"Relation With Applicant",
+    "familyDetails.familyMemberNo": "Family Membership Number",
+    "familyDetails.relationWithApplicant": "Relation With Applicant",
 
-    // Nominee
+    // Nominee - केवल ये तीन fields
     "nomineeDetails.nomineeName": "Nominee Name",
     "nomineeDetails.relationWithApplicant": "Relation with Applicant",
-    "nomineeDetails.introduceBy": "Introduced By",
-    "nomineeDetails.memberShipNo": "Membership No",
+    "nomineeDetails.mobileNo": "Mobile No",
+    // Witness fields यहाँ नहीं हैं - वे अलग introductionDetails section में जाएंगे
 };
 
-// Category mapping
 export const CATEGORY_MAP = {
     personalDetails: "Personal Details",
-    addressDetails: "Address Details", 
+    addressDetails: "Address Details",
     documents: "Documents",
     professionalDetails: "Professional Details",
     familyDetails: "Family Details",
     nomineeDetails: "Nominee Details",
+    introductionDetails: "Introduction/Witness By",
 };
 
 // Helper functions
@@ -96,16 +90,16 @@ export const CATEGORY_MAP = {
 // Format date to DD/MM/YYYY
 const formatDate = (dateValue) => {
     if (!dateValue) return "";
-    
+
     try {
         const date = new Date(dateValue);
         // Check if date is valid
         if (isNaN(date.getTime())) return String(dateValue);
-        
+
         const day = String(date.getDate()).padStart(2, '0');
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const year = date.getFullYear();
-        
+
         return `${day}/${month}/${year}`;
     } catch (error) {
         console.warn("Date formatting error:", error);
@@ -116,33 +110,27 @@ const formatDate = (dateValue) => {
 // Special function to format address objects without keys
 const formatAddressValue = (addressObj) => {
     if (!addressObj || typeof addressObj !== 'object') return "";
-    
+
     try {
         const addressParts = [];
-        
+
         // Add address components in a logical order without field names
         if (addressObj.flatHouseNo) addressParts.push(addressObj.flatHouseNo);
         if (addressObj.areaStreetSector) addressParts.push(addressObj.areaStreetSector);
         if (addressObj.landmark) addressParts.push(addressObj.landmark);
-        if (addressObj.cityTown) addressParts.push(addressObj.cityTown);
+        if (addressObj.cityTown || addressObj.city) addressParts.push(addressObj.cityTown || addressObj.city);
         if (addressObj.district) addressParts.push(addressObj.district);
         if (addressObj.state) addressParts.push(addressObj.state);
         if (addressObj.country) addressParts.push(addressObj.country);
-        if (addressObj.pinCode) addressParts.push(`Pincode: ${addressObj.pinCode}`);
-        
+        if (addressObj.pinCode || addressObj.pincode) addressParts.push(`Pincode: ${addressObj.pinCode || addressObj.pincode}`);
+
         return addressParts.join(", ");
     } catch (error) {
         console.warn("Address formatting error:", error);
-        // Fallback to original formatting if error occurs
-        try {
-            return Object.entries(addressObj).map(([k, v]) => `${k}: ${formatValuePlain(v)}`).join("; ");
-        } catch {
-            return JSON.stringify(addressObj);
-        }
+        return JSON.stringify(addressObj);
     }
 };
 
-// Update the formatValuePlain function to handle the virtual field properly
 export const formatValuePlain = (value, fieldKey, member) => {
     if (value === undefined || value === null) return "";
 
@@ -168,10 +156,12 @@ export const formatValuePlain = (value, fieldKey, member) => {
         return combined || "—";
     }
 
-    // Address fields
+    // Address fields - सभी address fields के लिए एक format
     if (
+        fieldKey === "addressDetails.currentAddress" ||
         fieldKey === "addressDetails.permanentAddress" ||
-        fieldKey === "addressDetails.currentResidentalAddress"
+        fieldKey === "addressDetails.previousAddresses" ||
+        fieldKey === "addressDetails.currentResidentalAddress" // पुराने field को भी support
     ) {
         return formatAddressValue(value);
     }
@@ -194,11 +184,7 @@ export const formatValuePlain = (value, fieldKey, member) => {
         if (value.length === 0) return "";
         if (typeof value[0] === "object") {
             return value
-                .map(v =>
-                    Object.entries(v)
-                        .map(([k, val]) => `${k}: ${formatValuePlain(val, k, member)}`)
-                        .join("; ")
-                )
+                .map(v => formatAddressValue(v)) // array में objects हों तो उन्हें भी format करें
                 .join(" | ");
         }
         return value.join(", ");
@@ -206,18 +192,15 @@ export const formatValuePlain = (value, fieldKey, member) => {
 
     // Object
     if (typeof value === "object") {
-        return Object.entries(value)
-            .map(([k, v]) => `${k}: ${formatValuePlain(v, k, member)}`)
-            .join("; ");
+        return formatAddressValue(value);
     }
 
     return String(value);
 };
 
-// Update the getValueByPath function to handle virtual fields
 export const getValueByPath = (obj, path) => {
     if (!path || !obj) return undefined;
-    
+
     // Handle virtual fields
     if (path === "personalDetails.titleCombinedName") {
         const title = getValueByPath(obj, "personalDetails.title") || "";
@@ -239,7 +222,7 @@ export const getValueByPath = (obj, path) => {
         const combined = `${title} ${name}`.trim();
         return combined || undefined;
     }
-    
+
     const parts = path.split(".");
     let cur = obj;
     for (const p of parts) {
@@ -318,26 +301,27 @@ export const filterFieldsByOccupation = (fields, member) => {
             "professionalDetails.qualification",
             "professionalDetails.occupation",
             "professionalDetails.inCaseOfService",
+            "professionalDetails.degreeNumber",
         ].includes(key)) {
             return true;
         }
 
         // GOVERNMENT SERVICE FIELDS
         if (type === "government") {
-            return key.startsWith("professionalDetails.serviceDetails.") 
-                   || key === "professionalDetails.inCaseOfServiceGovt";
+            return key.startsWith("professionalDetails.serviceDetails.")
+                || key === "professionalDetails.inCaseOfServiceGovt";
         }
 
         // PRIVATE SERVICE FIELDS
         if (type === "private") {
-            return key.startsWith("professionalDetails.serviceDetails.") 
-                   || key === "professionalDetails.inCaseOfPrivate";
+            return key.startsWith("professionalDetails.serviceDetails.")
+                || key === "professionalDetails.inCaseOfPrivate";
         }
 
         // BUSINESS FIELDS
         if (type === "business") {
             return key.startsWith("professionalDetails.businessDetails.")
-                   || key === "professionalDetails.inCaseOfBusiness";
+                || key === "professionalDetails.inCaseOfBusiness";
         }
 
         // Default: show all non-professional fields
@@ -345,59 +329,104 @@ export const filterFieldsByOccupation = (fields, member) => {
     });
 };
 
-// Get fields by category and view type
-
-// Get fields by category and view type with conditional logic
 export const getFieldsByCategory = (member, category, viewType = "all") => {
     const allKeys = Object.keys(FIELD_MAP);
-    
+
     // Filter out spouse name if marital status is not married
     const filteredKeys = allKeys.filter(key => {
         // Always include all fields except spouse name
         if (key !== "personalDetails.nameOfSpouse") return true;
-        
+
         // Only include spouse name if marital status is married
         const maritalStatus = getValueByPath(member, "personalDetails.maritalStatus") || "";
         return String(maritalStatus).toLowerCase() === "married";
     });
-    
+
+    // Special handling for introduction details
+    if (category === "introductionDetails") {
+        const introFields = ["nomineeDetails.memberShipNo", "nomineeDetails.introduceBy"];
+        return introFields.filter(key => {
+            const value = getValueByPath(member, key);
+            if (viewType === "all") return true;
+            if (viewType === "filled") return !isMissing(value);
+            if (viewType === "missing") return isMissing(value);
+            return true;
+        });
+    }
+
+    // Special handling for nominee details - witness fields को exclude करें
+    if (category === "nomineeDetails") {
+        const nomineeFields = filteredKeys.filter(key =>
+            key.startsWith("nomineeDetails.") &&
+            !["nomineeDetails.memberShipNo", "nomineeDetails.introduceBy"].includes(key)
+        );
+
+        return nomineeFields.filter(key => {
+            const value = getValueByPath(member, key);
+            if (viewType === "all") return true;
+            if (viewType === "filled") return !isMissing(value);
+            if (viewType === "missing") return isMissing(value);
+            return true;
+        });
+    }
+
     if (category === "all") {
         const filtered = filteredKeys.filter(key => {
+            // witness fields को exclude करें
+            if (["nomineeDetails.memberShipNo", "nomineeDetails.introduceBy"].includes(key)) {
+                return false;
+            }
+
             const value = getValueByPath(member, key);
             const missing = isMissing(value);
-            
+
             if (viewType === "all") return true;
             if (viewType === "filled") return !missing;
             if (viewType === "missing") return missing;
             return true;
         });
-        
+
         // Apply occupation-based filtering for professional fields
         return filterFieldsByOccupation(filtered, member);
     }
-    
+
     if (category === "filled") {
         const filtered = filteredKeys.filter(key => {
+            // witness fields को exclude करें
+            if (["nomineeDetails.memberShipNo", "nomineeDetails.introduceBy"].includes(key)) {
+                return false;
+            }
+
             const value = getValueByPath(member, key);
             return !isMissing(value);
         });
         return filterFieldsByOccupation(filtered, member);
     }
-    
+
     if (category === "missing") {
         const filtered = filteredKeys.filter(key => {
+            // witness fields को exclude करें
+            if (["nomineeDetails.memberShipNo", "nomineeDetails.introduceBy"].includes(key)) {
+                return false;
+            }
+
             const value = getValueByPath(member, key);
             return isMissing(value);
         });
         return filterFieldsByOccupation(filtered, member);
     }
-    
+
     // Specific category
     const filtered = filteredKeys.filter(key => {
+        // witness fields को exclude करें
+        if (["nomineeDetails.memberShipNo", "nomineeDetails.introduceBy"].includes(key)) {
+            return false;
+        }
+
         const value = getValueByPath(member, key);
         const missing = isMissing(value);
         const matchesCategory = key.startsWith(category);
-        
+
         if (viewType === "all") return matchesCategory;
         if (viewType === "filled") return matchesCategory && !missing;
         if (viewType === "missing") return matchesCategory && missing;
@@ -408,7 +437,7 @@ export const getFieldsByCategory = (member, category, viewType = "all") => {
     if (category === "professionalDetails") {
         return filterFieldsByOccupation(filtered, member);
     }
-    
+
     return filtered;
 };
 
@@ -437,19 +466,45 @@ const loadImageAsBase64 = (url) => {
     });
 };
 
-// Generate PDF
+const getFamilyMembersTableData = (member) => {
+    const familyMembers = getValueByPath(member, "familyDetails.familyMember");
+    const familyMemberNos = getValueByPath(member, "familyDetails.familyMemberNo");
+    const relations = getValueByPath(member, "familyDetails.relationWithApplicant");
+
+    // If no family members data exists
+    if (!familyMembers && !familyMemberNos && !relations) {
+        return [];
+    }
+
+    let tableData = [];
+
+    if (Array.isArray(familyMembers) && Array.isArray(familyMemberNos) && Array.isArray(relations)) {
+        const maxLength = Math.max(familyMembers.length, familyMemberNos.length, relations.length);
+        for (let i = 0; i < maxLength; i++) {
+            const name = familyMembers[i] || "—";
+            const memberNo = familyMemberNos[i] || "—";
+            const relation = relations[i] || "—";
+
+            if (name !== "—" || memberNo !== "—" || relation !== "—") {
+                tableData.push([i + 1, name, memberNo, relation]);
+            }
+        }
+    }
+    return tableData;
+};
+
 export const generateMemberFieldsPDF = async (member, category, viewType = "all") => {
     if (!member) return;
-    
+
     const doc = new jsPDF();
     const memberName = getMemberFullName(member);
 
     const membershipNumber = getValueByPath(member, "personalDetails.membershipNumber") || "N/A";
-    
-    const categoryDisplay = category === "all" ? "All Fields" : 
-                           category === "filled" ? "Filled Fields" :
-                           category === "missing" ? "Missing Fields" : 
-                           CATEGORY_MAP[category] || category;
+
+    const categoryDisplay = category === "all" ? "All Fields" :
+        category === "filled" ? "Filled Fields" :
+            category === "missing" ? "Missing Fields" :
+                CATEGORY_MAP[category] || category;
 
     // Add page number function
     const addPageNumbers = (doc) => {
@@ -467,20 +522,122 @@ export const generateMemberFieldsPDF = async (member, category, viewType = "all"
         }
     };
 
-    // Function to add category section
+    // Function to get introduction/witness data
+    const getIntroductionData = (member) => {
+        const memberShipNo = getValueByPath(member, "nomineeDetails.memberShipNo");
+        const introduceBy = getValueByPath(member, "nomineeDetails.introduceBy");
+
+        const data = [];
+
+        if (memberShipNo || introduceBy) {
+            if (memberShipNo) {
+                data.push(["1", "Membership No", memberShipNo || "—"]);
+            }
+            if (introduceBy) {
+                data.push(["2", "Introduced By", introduceBy || "—"]);
+            }
+        }
+
+        return data;
+    };
+
+    // Function to add category section (updated version with introduction section)
     const addCategorySection = (doc, categoryKey, categoryName, fields, startY) => {
-        if (fields.length === 0) return startY;
-        
+        if (fields.length === 0 && categoryKey !== "introductionDetails") return startY;
+
         // Add category header
         doc.setFontSize(14);
         doc.setFont(undefined, 'bold');
         doc.setTextColor(0, 0, 0);
         doc.text(categoryName, 14, startY);
-        
+
+        if (categoryKey === "familyDetails") {
+            const familyTableData = getFamilyMembersTableData(member);
+
+            if (familyTableData.length > 0) {
+                autoTable(doc, {
+                    startY: startY + 5,
+                    head: [["S. No", "Family Member's Name", "Family Membership Number", "Relation With Member"]],
+                    body: familyTableData,
+                    styles: {
+                        fontSize: 9,
+                        cellPadding: 3,
+                        textColor: [0, 0, 0],
+                        fontStyle: 'normal'
+                    },
+                    headStyles: {
+                        fillColor: [25, 118, 210],
+                        textColor: 255,
+                        fontSize: 10,
+                        fontStyle: 'bold'
+                    },
+                    bodyStyles: {
+                        textColor: [0, 0, 0]
+                    },
+                    alternateRowStyles: {
+                        fillColor: [245, 245, 245],
+                        textColor: [0, 0, 0]
+                    },
+                    columnStyles: {
+                        0: { cellWidth: 12, textColor: [0, 0, 0] },
+                        1: { cellWidth: 'auto', textColor: [0, 0, 0] },
+                        2: { cellWidth: 'auto', textColor: [0, 0, 0] },
+                        3: { cellWidth: 'auto', textColor: [0, 0, 0] }
+                    },
+                    theme: 'grid',
+                });
+            } else {
+                // No family members data available
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'normal');
+                doc.text("No family members data available", 14, startY + 10);
+                return startY + 15;
+            }
+
+            return doc.lastAutoTable.finalY + 10;
+        }
+
+        // Handle introduction/witness section
+        if (categoryKey === "introductionDetails") {
+            const introData = getIntroductionData(member);
+
+            if (introData.length > 0) {
+                autoTable(doc, {
+                    startY: startY + 5,
+                    head: [["S. No", "Particulars", "Details"]],
+                    body: introData,
+                    styles: {
+                        fontSize: 9,
+                        cellPadding: 3,
+                        textColor: [0, 0, 0],
+                    },
+                    headStyles: {
+                        fillColor: [25, 118, 210],
+                        textColor: 255,
+                        fontSize: 10,
+                        fontStyle: "bold"
+                    },
+                    columnStyles: {
+                        0: { cellWidth: 25, fontStyle: "bold" },
+                        1: { cellWidth: 60, fontStyle: "bold" },
+                        2: { cellWidth: "auto" }
+                    },
+                    theme: "grid",
+                });
+                return doc.lastAutoTable.finalY + 10;
+            } else {
+                // No introduction data available
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'normal');
+                doc.text("No introduction/witness data available", 14, startY + 10);
+                return startY + 15;
+            }
+        }
+
         // Prepare table data with serial numbers starting from 1 for each category
         const body = fields.map((key, idx) => {
             let displayValue;
-            
+
             // Handle virtual fields specially
             if (key === "personalDetails.titleCombinedName") {
                 const title = getValueByPath(member, "personalDetails.title") || "";
@@ -498,7 +655,7 @@ export const generateMemberFieldsPDF = async (member, category, viewType = "all"
                 const raw = getValueByPath(member, key);
                 displayValue = formatValuePlain(raw, key, member) || "—";
             }
-            
+
             return [
                 idx + 1, // Serial number starting from 1 for each category
                 FIELD_MAP[key] || key,
@@ -506,36 +663,32 @@ export const generateMemberFieldsPDF = async (member, category, viewType = "all"
             ];
         });
 
-        // Add table for this category
         autoTable(doc, {
             startY: startY + 5,
-            head: [["S. No", "Field", "Value"]],
-            body,
-            styles: { 
-                fontSize: 9, 
+            head: [["S. No", "Particulars", "Member Details"]],
+
+            body: body,
+
+            styles: {
+                fontSize: 9,
                 cellPadding: 3,
                 textColor: [0, 0, 0],
-                fontStyle: 'normal'
             },
-            headStyles: { 
-                fillColor: [25, 118, 210], 
+
+            headStyles: {
+                fillColor: [25, 118, 210],
                 textColor: 255,
                 fontSize: 10,
-                fontStyle: 'bold'
+                fontStyle: "bold"
             },
-            bodyStyles: {
-                textColor: [0, 0, 0]
-            },
-            alternateRowStyles: {
-                fillColor: [245, 245, 245],
-                textColor: [0, 0, 0]
-            },
+
             columnStyles: {
-                0: { cellWidth: 12, textColor: [0, 0, 0] },
-                1: { cellWidth: 60, textColor: [0, 0, 0] },
-                2: { cellWidth: 'auto', textColor: [0, 0, 0] }
+                0: { cellWidth: 25, fontStyle: "bold" },  // ⭐ No Wrap + Bold
+                1: { cellWidth: 60, fontStyle: "bold" },  // ⭐ Particulars Bold
+                2: { cellWidth: "auto" }
             },
-            theme: 'grid',
+
+            theme: "grid",
         });
 
         return doc.lastAutoTable.finalY + 10;
@@ -553,33 +706,41 @@ export const generateMemberFieldsPDF = async (member, category, viewType = "all"
     let startY = 35; // Start position for member info section
 
     // Create member info section with photo and text side by side
-    if (passportPhotoUrl && (category === "personalDetails" || category === "all")) {
+    if (category === "personalDetails" || category === "all") {
         try {
             const pageWidth = doc.internal.pageSize.width;
             const photoWidth = 25;
             const photoHeight = 25;
             const photoX = pageWidth - 40; // Right side with margin
             const photoY = startY;
-            
-            // Try to load and add the actual image
-            try {
-                const imageData = await loadImageAsBase64(passportPhotoUrl);
-                doc.addImage(imageData, 'JPEG', photoX, photoY, photoWidth, photoHeight);
-            } catch (imageError) {
-                console.warn("Could not load passport photo image, using placeholder:", imageError);
-                // Fallback to placeholder if image loading fails
+
+            // If a URL exists, try to load & draw it. If it fails, fall back to placeholder.
+            if (passportPhotoUrl) {
+                try {
+                    const imageData = await loadImageAsBase64(passportPhotoUrl);
+                    doc.addImage(imageData, 'JPEG', photoX, photoY, photoWidth, photoHeight);
+                } catch (imageError) {
+                    console.warn("Could not load passport photo image, using placeholder:", imageError);
+                    // Fallback to placeholder if image loading fails
+                    doc.setFillColor(240, 240, 240);
+                    doc.rect(photoX, photoY, photoWidth, photoHeight, 'F');
+                    doc.setFontSize(6);
+                    doc.setTextColor(100, 100, 100);
+                    doc.text("Photo", photoX + (photoWidth / 2), photoY + (photoHeight / 2) + 1, { align: 'center' });
+                }
+            } else {
+                // No URL provided — draw placeholder box with "Photo"
                 doc.setFillColor(240, 240, 240);
                 doc.rect(photoX, photoY, photoWidth, photoHeight, 'F');
                 doc.setFontSize(6);
                 doc.setTextColor(100, 100, 100);
-                doc.text("Photo", photoX + photoWidth/2, photoY + photoHeight/2, { align: 'center' });
+                doc.text("Photo", photoX + (photoWidth / 2), photoY + (photoHeight / 2) + 1, { align: 'center' });
             }
-            
-            // Add photo border
+
+            // Add photo border (draw in both real image and placeholder cases)
             doc.setDrawColor(150);
             doc.setLineWidth(0.5);
             doc.rect(photoX, photoY, photoWidth, photoHeight);
-            
         } catch (error) {
             console.warn("Could not add passport photo to PDF:", error);
         }
@@ -588,15 +749,14 @@ export const generateMemberFieldsPDF = async (member, category, viewType = "all"
     // Add member information on the left side (same line as photo)
     const infoStartX = 14;
     const infoStartY = startY;
-    
+
     doc.setFontSize(16);
     doc.setFont(undefined, 'bold');
-    doc.text(`Member Report - ${memberName}`, infoStartX, infoStartY);
-    
+    doc.text(`Member Name - ${memberName}`, infoStartX, infoStartY);
+
     doc.setFontSize(10);
     doc.setFont(undefined, 'normal');
-    doc.text(`Membership: ${membershipNumber}`, infoStartX, infoStartY + 7);
-    doc.text(`Category: ${categoryDisplay} | View: ${viewType}`, infoStartX, infoStartY + 14);
+    doc.text(`Membership Number: ${membershipNumber}`, infoStartX, infoStartY + 7);
     doc.text(`Generated: ${new Date().toLocaleString()}`, infoStartX, infoStartY + 21);
 
     // Adjust startY for the content (below both photo and text)
@@ -605,22 +765,22 @@ export const generateMemberFieldsPDF = async (member, category, viewType = "all"
     if (category === "all") {
         // For "all" category, organize by individual categories
         const categories = Object.keys(CATEGORY_MAP);
-        
+
         for (const categoryKey of categories) {
             const categoryFields = getFieldsByCategory(member, categoryKey, viewType);
-            
-            if (categoryFields.length > 0) {
+
+            if (categoryFields.length > 0 || categoryKey === "introductionDetails") {
                 // Check if we need a new page
                 if (currentY > doc.internal.pageSize.height - 50) {
                     doc.addPage();
                     currentY = 20;
                 }
-                
+
                 currentY = addCategorySection(
-                    doc, 
-                    categoryKey, 
-                    CATEGORY_MAP[categoryKey], 
-                    categoryFields, 
+                    doc,
+                    categoryKey,
+                    CATEGORY_MAP[categoryKey],
+                    categoryFields,
                     currentY
                 );
             }
@@ -628,11 +788,11 @@ export const generateMemberFieldsPDF = async (member, category, viewType = "all"
     } else {
         // For specific categories, use the existing single table approach
         const fields = getFieldsByCategory(member, category, viewType);
-        
+
         if (fields.length > 0) {
             const body = fields.map((key, idx) => {
                 let displayValue;
-                
+
                 // Handle virtual fields specially
                 if (key === "personalDetails.titleCombinedName") {
                     const title = getValueByPath(member, "personalDetails.title") || "";
@@ -650,7 +810,7 @@ export const generateMemberFieldsPDF = async (member, category, viewType = "all"
                     const raw = getValueByPath(member, key);
                     displayValue = formatValuePlain(raw, key, member) || "—";
                 }
-                
+
                 return [
                     idx + 1,
                     FIELD_MAP[key] || key,
@@ -660,34 +820,33 @@ export const generateMemberFieldsPDF = async (member, category, viewType = "all"
 
             autoTable(doc, {
                 startY: currentY,
-                head: [["S. No", "Field", "Value"]],
-                body,
-                styles: { 
-                    fontSize: 9, 
+                head: [["S. No", "Particulars", "Member Details"]],
+
+                body: body,
+
+                styles: {
+                    fontSize: 9,
                     cellPadding: 3,
                     textColor: [0, 0, 0],
-                    fontStyle: 'normal'
                 },
-                headStyles: { 
-                    fillColor: [25, 118, 210], 
+
+                headStyles: {
+                    fillColor: [25, 118, 210],
                     textColor: 255,
                     fontSize: 10,
-                    fontStyle: 'bold'
+                    fontStyle: "bold"
                 },
-                bodyStyles: {
-                    textColor: [0, 0, 0]
-                },
-                alternateRowStyles: {
-                    fillColor: [245, 245, 245],
-                    textColor: [0, 0, 0]
-                },
+
                 columnStyles: {
-                    0: { cellWidth: 12, textColor: [0, 0, 0] },
-                    1: { cellWidth: 60, textColor: [0, 0, 0] },
-                    2: { cellWidth: 'auto', textColor: [0, 0, 0] }
+                    0: { cellWidth: 25, fontStyle: "bold" },
+                    1: { cellWidth: 60, fontStyle: "bold" },
+                    2: { cellWidth: "auto" }
                 },
-                theme: 'grid',
+
+                theme: "grid",
             });
+
+            currentY = doc.lastAutoTable.finalY + 10;
         }
     }
 

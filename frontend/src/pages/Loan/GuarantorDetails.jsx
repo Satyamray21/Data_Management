@@ -46,7 +46,7 @@ const GuarantorDetails = ({ loanFormData, onGuarantorSubmit, guarantorDetails })
     const [submitted, setSubmitted] = useState(false);
     const [loading, setLoading] = useState(false);
     const dispatch = useDispatch();
-    
+
     // Get members from Redux store with multiple possible state paths
     const members = useSelector((state) =>
         state.member?.members ||
@@ -60,8 +60,8 @@ const GuarantorDetails = ({ loanFormData, onGuarantorSubmit, guarantorDetails })
 
     // Get loading state from Redux
     const membersLoading = useSelector((state) =>
-        state.member?.loading || 
-        state.members?.loading || 
+        state.member?.loading ||
+        state.members?.loading ||
         false
     );
 
@@ -92,36 +92,36 @@ const GuarantorDetails = ({ loanFormData, onGuarantorSubmit, guarantorDetails })
     };
 
     const handleAddGuarantor = (values, { resetForm }) => {
-    const selectedMember = members.find(
-        (member) => member.id === values.memberId || member._id === values.memberId
-    );
+        const selectedMember = members.find(
+            (member) => member.id === values.memberId || member._id === values.memberId
+        );
 
-    const pd = selectedMember?.personalDetails || {};
+        const pd = selectedMember?.personalDetails || {};
 
-    const newGuarantor = {
-        id: Date.now(),
+        const newGuarantor = {
+            id: Date.now(),
 
-        // FROM FORM
-        accountType: values.accountType,
-        accountNumber: values.accountNumber,
-        fileNumber: values.fileNumber,
+            // FROM FORM
+            accountType: values.accountType,
+            accountNumber: values.accountNumber,
+            fileNumber: values.fileNumber,
 
-        // REQUIRED FOR BACKEND
-        memberId: values.memberId,
-        membershipNumber: values.membershipNumber,
-        memberName: pd.nameOfMember || "",
-        mobileNumber: pd.phoneNo || "",
+            // REQUIRED FOR BACKEND
+            memberId: values.memberId,
+            membershipNumber: values.membershipNumber,
+            memberName: pd.nameOfMember || "",
+            mobileNumber: pd.phoneNo || "",
 
-        // UI fields
-        name: values.name,
-        address: values.address,
+            // UI fields
+            name: values.name,
+            address: values.address,
 
-        memberData: selectedMember
+            memberData: selectedMember
+        };
+
+        setGuarantors([...guarantors, newGuarantor]);
+        resetForm();
     };
-
-    setGuarantors([...guarantors, newGuarantor]);
-    resetForm();
-};
 
 
     const removeGuarantor = (id) => {
@@ -141,68 +141,68 @@ const GuarantorDetails = ({ loanFormData, onGuarantorSubmit, guarantorDetails })
         };
 
         console.log("📋 Guarantor Payload:", guarantorPayload);
-       onGuarantorSubmit({
-    guarantors: guarantors.map(g => ({
-        memberId: g.memberId,
-        membershipNumber: g.membershipNumber,
-        fullName: g.name,
-        mobileNumber: g.mobileNumber,
-        address: g.address,
-        fileNumber:g.fileNumber,
-        accountType:g.accountType,
-        accountNumber:g.accountNumber
+        onGuarantorSubmit({
+            guarantors: guarantors.map(g => ({
+                memberId: g.memberId,
+                membershipNumber: g.membershipNumber,
+                fullName: g.name,
+                mobileNumber: g.mobileNumber,
+                address: g.address,
+                fileNumber: g.fileNumber,
+                accountType: g.accountType,
+                accountNumber: g.accountNumber
 
-    }))
-});
+            }))
+        });
 
 
 
     };
 
     // Handle member selection change
-  const handleMemberChange = (event, setFieldValue) => {
-    const memberId = event.target.value;
-    setFieldValue('memberId', memberId);
+    const handleMemberChange = (event, setFieldValue) => {
+        const memberId = event.target.value;
+        setFieldValue('memberId', memberId);
 
-    const selectedMember = members.find(
-        (member) => member.id === memberId || member._id === memberId
-    );
+        const selectedMember = members.find(
+            (member) => member.id === memberId || member._id === memberId
+        );
 
-    if (selectedMember) {
-        const pd = selectedMember.personalDetails || {};
-        const permanent = selectedMember.addressDetails?.permanentAddress || {};
+        if (selectedMember) {
+            const pd = selectedMember.personalDetails || {};
+            const permanent = selectedMember.addressDetails?.permanentAddress || {};
 
-        // Convert object to single string
-        const addressString = [
-            permanent.flatHouseNo,
-            permanent.areaStreetSector,
-            permanent.locality,
-            permanent.landmark,
-            permanent.city,
-            permanent.state,
-            permanent.country,
-            permanent.pincode ? `- ${permanent.pincode}` : ""
-        ]
-            .filter(Boolean)
-            .join(", ");
+            // Convert object to single string
+            const addressString = [
+                permanent.flatHouseNo,
+                permanent.areaStreetSector,
+                permanent.locality,
+                permanent.landmark,
+                permanent.city,
+                permanent.state,
+                permanent.country,
+                permanent.pincode ? `- ${permanent.pincode}` : ""
+            ]
+                .filter(Boolean)
+                .join(", ");
 
-        setFieldValue("membershipNumber", pd.membershipNumber || "");
-        setFieldValue("name", pd.nameOfMember || "");
-        setFieldValue("address", addressString || "");
-    }
-};
+            setFieldValue("membershipNumber", pd.membershipNumber || "");
+            setFieldValue("name", pd.nameOfMember || "");
+            setFieldValue("address", addressString || "");
+        }
+    };
 
 
 
     // Helper function to get member display name
-   const getMemberDisplayName = (member) => {
-    const pd = member.personalDetails || {};
+    const getMemberDisplayName = (member) => {
+        const pd = member.personalDetails || {};
 
-    const name = pd.nameOfMember || "Unknown Member";
-    const membershipNumber = pd.membershipNumber || "";
+        const name = pd.nameOfMember || "Unknown Member";
+        const membershipNumber = pd.membershipNumber || "";
 
-    return `${name}${membershipNumber ? " - " + membershipNumber : ""}`;
-};
+        return `${name}${membershipNumber ? " - " + membershipNumber : ""}`;
+    };
 
 
     // Helper function to get member ID
@@ -244,15 +244,15 @@ const GuarantorDetails = ({ loanFormData, onGuarantorSubmit, guarantorDetails })
                     Add New Guarantor
                 </Typography>
 
-               <Formik
-    initialValues={initialValues}
-    validationSchema={guarantorValidationSchema}
-    onSubmit={handleAddGuarantor}
->
-    {({ values, errors, touched, handleChange, handleBlur, handleSubmit: formikSubmit, setFieldValue }) => (
-        <Form onSubmit={formikSubmit}>
+                <Formik
+                    initialValues={initialValues}
+                    validationSchema={guarantorValidationSchema}
+                    onSubmit={handleAddGuarantor}
+                >
+                    {({ values, errors, touched, handleChange, handleBlur, handleSubmit: formikSubmit, setFieldValue }) => (
+                        <Form onSubmit={formikSubmit}>
 
-                       
+
                             <Grid container spacing={2}>
                                 {/* Account Type */}
                                 <Grid size={{ xs: 12, md: 6 }}>
@@ -328,7 +328,7 @@ const GuarantorDetails = ({ loanFormData, onGuarantorSubmit, guarantorDetails })
                                                 members.map((member) => {
                                                     const memberId = getMemberId(member);
                                                     const displayName = getMemberDisplayName(member);
-                                                    
+
                                                     return (
                                                         <MenuItem key={memberId} value={memberId}>
                                                             {displayName || `Member ${memberId}`}

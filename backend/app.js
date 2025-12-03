@@ -38,4 +38,7 @@ app.use("/api/v1/notice", noticeRouter);
 import loanRouter from "./src/router/loan.router.js";
 app.use("/api/v1/loans", loanRouter);
 
+
+import uploadExcelRouter from "./src/router/uploadExcelRouter.js";
+app.use("/api/v1/excel", uploadExcelRouter);
 export { app }

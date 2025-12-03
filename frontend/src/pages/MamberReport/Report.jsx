@@ -27,8 +27,7 @@ import {
     Alert,
     Chip,
     Tabs,
-    Tab,
-    TablePagination
+    Tab
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
@@ -132,6 +131,7 @@ const ALL_FIELDS = {
     // Professional Details
     "professionalDetails.qualification": "Qualification",
     "professionalDetails.occupation": "Occupation",
+    "professionalDetails.degreeNumber": "Degree Number",
 
     // Family Details
     "familyDetails.familyMembersMemberOfSociety": "Family in Society",
@@ -143,7 +143,7 @@ const ALL_FIELDS = {
     "bankDetails.branch": "Bank Branch",
     "bankDetails.accountNumber": "Account Number",
     "bankDetails.ifscCode": "IFSC Code",
-    "bankDetails.civilScore": "Civil Score", // ✅ Added Civil Score
+    "bankDetails.civilScore": "Civil Score",
 
     // Reference Details
     "referenceDetails.referenceName": "Reference Name",
@@ -244,24 +244,6 @@ function TabPanel({ children, value, index, ...other }) {
     );
 }
 
-// helper to add "Page X of Y" footer to all pages
-const addPageNumbers = (doc) => {
-    try {
-        const pageCount = doc.getNumberOfPages();
-        const pageWidth = doc.internal.pageSize.getWidth();
-        const pageHeight = doc.internal.pageSize.getHeight();
-        const footerY = pageHeight - 10;
-        doc.setFontSize(9);
-        doc.setTextColor(100);
-        for (let i = 1; i <= pageCount; i++) {
-            doc.setPage(i);
-            doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, footerY, { align: 'center' });
-        }
-    } catch (err) {
-        console.error("Failed to add page numbers:", err);
-    }
-}
-
 // Main Component
 const MissingMembersTable = () => {
     const dispatch = useDispatch();
@@ -273,8 +255,6 @@ const MissingMembersTable = () => {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [memberToDelete, setMemberToDelete] = useState(null);
     const [tabValue, setTabValue] = useState(0);
-    const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
 
     // Fetch members on component mount
     useEffect(() => {
@@ -315,9 +295,6 @@ const MissingMembersTable = () => {
             styles: { fontSize: 9, cellPadding: 3 },
             headStyles: { fillColor: [25, 118, 210], textColor: 255, fontSize: 10 },
         });
-
-        // add page numbers before saving
-        addPageNumbers(doc);
 
         doc.save(`${viewType}_${ALL_FIELDS[selectedField]}_Report_${Date.now()}.pdf`);
     };
@@ -407,9 +384,35 @@ const MissingMembersTable = () => {
                 search: "",
                 selectedField: "documents.aadhaarNo",
                 viewType: "all", // all, missing, available
-                civilScoreFilter: "all" // Civil score specific filter
+                civilScoreFilter: "all", // Civil score specific filter
+                occupationFilter: "all",
+                religionFilter: "all",
+                categoryFilter: "all"
             }} onSubmit={() => { }}>
                 {({ values, setFieldValue }) => {
+                    // Derived options for filters
+                    const occupationOptions = useMemo(() => {
+                        const set = new Set();
+                        (members || []).forEach(m => {
+                            const v = (getValueByPath(m, "professionalDetails.occupation") || "").toString().trim();
+                            if (v) set.add(v);
+                        });
+                        return ["all", ...Array.from(set)];
+                    }, [members]);
+
+                    const religionOptions = useMemo(() => {
+                        const set = new Set();
+                        (members || []).forEach(m => {
+                            const v = (getValueByPath(m, "personalDetails.religion") || "").toString().trim();
+                            if (v) set.add(v);
+                        });
+                        return ["all", ...Array.from(set)];
+                    }, [members]);
+
+                    const categoryOptions = useMemo(() => {
+                        return ["all", ...Object.keys(FIELD_GROUPS)];
+                    }, []);
+
                     const filteredMembers = useMemo(() => {
                         if (!members) return [];
 
@@ -419,14 +422,67 @@ const MissingMembersTable = () => {
                         const searchTerm = values.search.trim().toLowerCase();
                         if (searchTerm) {
                             result = result.filter(m => {
-                                const name = (getValueByPath(m, "personalDetails.nameOfMember") || "").toLowerCase();
                                 const memNo = (getValueByPath(m, "personalDetails.membershipNumber") || "").toLowerCase();
+                                const name = (getValueByPath(m, "personalDetails.nameOfMember") || "").toLowerCase();
                                 const phone = (getValueByPath(m, "personalDetails.phoneNo") || "").toLowerCase();
-                                return name.includes(searchTerm) || memNo.includes(searchTerm) || phone.includes(searchTerm);
+                                const email = (getValueByPath(m, "personalDetails.emailId") || "").toLowerCase();
+                                const caste = (getValueByPath(m, "personalDetails.caste") || "").toLowerCase();
+                                const religion = (getValueByPath(m, "personalDetails.religion") || "").toLowerCase();
+                                const occupation = (getValueByPath(m, "professionalDetails.occupation") || "").toLowerCase();
+
+                                // qualification, degreeNumber, company name, designation
+                                const qualification = (getValueByPath(m, "professionalDetails.qualification") || "").toLowerCase();
+                                const degreeNumber = (getValueByPath(m, "professionalDetails.degreeNumber") || "").toLowerCase();
+                                const companyName = (getValueByPath(m, "professionalDetails.serviceDetails.fullNameOfCompany") || "").toLowerCase();
+                                const designation = (getValueByPath(m, "professionalDetails.serviceDetails.designation") || "").toLowerCase();
+
+                                return name.includes(searchTerm) ||
+                                    memNo.includes(searchTerm) ||
+                                    phone.includes(searchTerm) ||
+                                    email.includes(searchTerm) ||
+                                    caste.includes(searchTerm) ||
+                                    religion.includes(searchTerm) ||
+                                    occupation.includes(searchTerm) ||
+                                    qualification.includes(searchTerm) ||
+                                    degreeNumber.includes(searchTerm) ||
+                                    companyName.includes(searchTerm) ||
+                                    designation.includes(searchTerm);
                             });
                         }
 
-                        // Filter by field status
+                        // Filter by occupation
+                        if (values.occupationFilter && values.occupationFilter !== "all") {
+                            const chosen = values.occupationFilter.toLowerCase();
+                            result = result.filter(m => {
+                                const occ = (getValueByPath(m, "professionalDetails.occupation") || "").toLowerCase();
+                                return occ === chosen;
+                            });
+                        }
+
+                        // Filter by religion
+                        if (values.religionFilter && values.religionFilter !== "all") {
+                            const chosen = values.religionFilter.toLowerCase();
+                            result = result.filter(m => {
+                                const rel = (getValueByPath(m, "personalDetails.religion") || "").toLowerCase();
+                                return rel === chosen;
+                            });
+                        }
+
+                        // Filter by category (keep members who have at least one non-missing field in that group)
+                        if (values.categoryFilter && values.categoryFilter !== "all") {
+                            const groupKey = values.categoryFilter;
+                            const fields = FIELD_GROUPS[groupKey]?.fields || [];
+                            if (fields.length > 0) {
+                                result = result.filter(m => {
+                                    return fields.some(fk => {
+                                        const fieldValue = getValueByPath(m, fk);
+                                        return !isMissing(fieldValue);
+                                    });
+                                });
+                            }
+                        }
+
+                        // Filter by field status (missing / available)
                         if (values.viewType !== "all") {
                             result = result.filter(m => {
                                 const fieldValue = getValueByPath(m, values.selectedField);
@@ -445,13 +501,7 @@ const MissingMembersTable = () => {
                         }
 
                         return result;
-                    }, [values.search, values.selectedField, values.viewType, values.civilScoreFilter, members]);
-
-                    // Paginated data
-                    const paginatedMembers = useMemo(() => {
-                        const startIndex = page * rowsPerPage;
-                        return filteredMembers.slice(startIndex, startIndex + rowsPerPage);
-                    }, [filteredMembers, page, rowsPerPage]);
+                    }, [values.search, values.selectedField, values.viewType, values.civilScoreFilter, values.occupationFilter, values.religionFilter, values.categoryFilter, members]);
 
                     const allMembersCount = useMemo(() => {
                         return members.filter(m => {
@@ -460,7 +510,26 @@ const MissingMembersTable = () => {
                                 const name = (getValueByPath(m, "personalDetails.nameOfMember") || "").toLowerCase();
                                 const memNo = (getValueByPath(m, "personalDetails.membershipNumber") || "").toLowerCase();
                                 const phone = (getValueByPath(m, "personalDetails.phoneNo") || "").toLowerCase();
-                                return name.includes(searchTerm) || memNo.includes(searchTerm) || phone.includes(searchTerm);
+                                const email = (getValueByPath(m, "personalDetails.emailId") || "").toLowerCase();
+                                const caste = (getValueByPath(m, "personalDetails.caste") || "").toLowerCase();
+                                const religion = (getValueByPath(m, "personalDetails.religion") || "").toLowerCase();
+                                const occupation = (getValueByPath(m, "professionalDetails.occupation") || "").toLowerCase();
+                                const qualification = (getValueByPath(m, "professionalDetails.qualification") || "").toLowerCase();
+                                const degreeNumber = (getValueByPath(m, "professionalDetails.degreeNumber") || "").toLowerCase();
+                                const companyName = (getValueByPath(m, "professionalDetails.serviceDetails.fullNameOfCompany") || "").toLowerCase();
+                                const designation = (getValueByPath(m, "professionalDetails.serviceDetails.designation") || "").toLowerCase();
+
+                                return name.includes(searchTerm) ||
+                                    memNo.includes(searchTerm) ||
+                                    phone.includes(searchTerm) ||
+                                    email.includes(searchTerm) ||
+                                    caste.includes(searchTerm) ||
+                                    religion.includes(searchTerm) ||
+                                    occupation.includes(searchTerm) ||
+                                    qualification.includes(searchTerm) ||
+                                    degreeNumber.includes(searchTerm) ||
+                                    companyName.includes(searchTerm) ||
+                                    designation.includes(searchTerm);
                             }
                             return true;
                         }).length;
@@ -476,7 +545,27 @@ const MissingMembersTable = () => {
                                 const name = (getValueByPath(m, "personalDetails.nameOfMember") || "").toLowerCase();
                                 const memNo = (getValueByPath(m, "personalDetails.membershipNumber") || "").toLowerCase();
                                 const phone = (getValueByPath(m, "personalDetails.phoneNo") || "").toLowerCase();
-                                if (!name.includes(searchTerm) && !memNo.includes(searchTerm) && !phone.includes(searchTerm)) {
+                                const email = (getValueByPath(m, "personalDetails.emailId") || "").toLowerCase();
+                                const caste = (getValueByPath(m, "personalDetails.caste") || "").toLowerCase();
+                                const religion = (getValueByPath(m, "personalDetails.religion") || "").toLowerCase();
+                                const occupation = (getValueByPath(m, "professionalDetails.occupation") || "").toLowerCase();
+                                const qualification = (getValueByPath(m, "professionalDetails.qualification") || "").toLowerCase();
+                                const degreeNumber = (getValueByPath(m, "professionalDetails.degreeNumber") || "").toLowerCase();
+                                const companyName = (getValueByPath(m, "professionalDetails.serviceDetails.fullNameOfCompany") || "").toLowerCase();
+                                const designation = (getValueByPath(m, "professionalDetails.serviceDetails.designation") || "").toLowerCase();
+
+                                if (!name.includes(searchTerm) &&
+                                    !memNo.includes(searchTerm) &&
+                                    !phone.includes(searchTerm) &&
+                                    !email.includes(searchTerm) &&
+                                    !caste.includes(searchTerm) &&
+                                    !religion.includes(searchTerm) &&
+                                    !occupation.includes(searchTerm) &&
+                                    !qualification.includes(searchTerm) &&
+                                    !degreeNumber.includes(searchTerm) &&
+                                    !companyName.includes(searchTerm) &&
+                                    !designation.includes(searchTerm)
+                                ) {
                                     return false;
                                 }
                             }
@@ -512,7 +601,7 @@ const MissingMembersTable = () => {
                                 <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", alignItems: "center" }}>
                                     <TextField
                                         size="small"
-                                        placeholder="Search by name, membership no, or phone"
+                                        placeholder="Search by name, membership no, phone, email, caste, religion, occupation, qualification..."
                                         value={values.search}
                                         onChange={(e) => setFieldValue("search", e.target.value)}
                                         InputProps={{
@@ -522,10 +611,10 @@ const MissingMembersTable = () => {
                                                 </InputAdornment>
                                             ),
                                         }}
-                                        sx={{ width: 300 }}
+                                        sx={{ width: 420 }}
                                     />
 
-                                    <FormControl size="small" sx={{ minWidth: 180 }}>
+                                    <FormControl size="small" sx={{ minWidth: 140 }}>
                                         <InputLabel>View Type</InputLabel>
                                         <Select
                                             value={values.viewType}
@@ -535,6 +624,48 @@ const MissingMembersTable = () => {
                                             <MenuItem value="all">All Members</MenuItem>
                                             <MenuItem value="missing">Missing Only</MenuItem>
                                             <MenuItem value="available">Available Only</MenuItem>
+                                        </Select>
+                                    </FormControl>
+
+                                    {/* Occupation Filter */}
+                                    <FormControl size="small" sx={{ minWidth: 160 }}>
+                                        <InputLabel>Occupation</InputLabel>
+                                        <Select
+                                            value={values.occupationFilter}
+                                            label="Occupation"
+                                            onChange={(e) => setFieldValue("occupationFilter", e.target.value)}
+                                        >
+                                            {occupationOptions.map(opt => (
+                                                <MenuItem key={opt} value={opt}>{opt === "all" ? "All Occupations" : opt}</MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+
+                                    {/* Religion Filter */}
+                                    <FormControl size="small" sx={{ minWidth: 140 }}>
+                                        <InputLabel>Religion</InputLabel>
+                                        <Select
+                                            value={values.religionFilter}
+                                            label="Religion"
+                                            onChange={(e) => setFieldValue("religionFilter", e.target.value)}
+                                        >
+                                            {religionOptions.map(opt => (
+                                                <MenuItem key={opt} value={opt}>{opt === "all" ? "All Religions" : opt}</MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+
+                                    {/* Category (field group) Filter */}
+                                    <FormControl size="small" sx={{ minWidth: 160 }}>
+                                        <InputLabel>Category</InputLabel>
+                                        <Select
+                                            value={values.categoryFilter}
+                                            label="Category"
+                                            onChange={(e) => setFieldValue("categoryFilter", e.target.value)}
+                                        >
+                                            {categoryOptions.map(opt => (
+                                                <MenuItem key={opt} value={opt}>{opt === "all" ? "All Categories" : FIELD_GROUPS[opt]?.label || opt}</MenuItem>
+                                            ))}
                                         </Select>
                                     </FormControl>
 
@@ -597,7 +728,6 @@ const MissingMembersTable = () => {
                                                     label={ALL_FIELDS[fieldKey]}
                                                     onClick={() => {
                                                         setFieldValue("selectedField", fieldKey);
-                                                        // Reset civil score filter when switching away from civil score field
                                                         if (fieldKey !== "bankDetails.civilScore") {
                                                             setFieldValue("civilScoreFilter", "all");
                                                         }
@@ -680,6 +810,13 @@ const MissingMembersTable = () => {
                                             <span> | Filter: <strong>{CIVIL_SCORE_FILTERS[values.civilScoreFilter]}</strong></span>
                                         )}
                                     </Typography>
+
+                                    {/* Active filters summary */}
+                                    <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                                        {values.occupationFilter !== "all" && <span>Occupation: <strong>{values.occupationFilter}</strong> &nbsp;</span>}
+                                        {values.religionFilter !== "all" && <span>Religion: <strong>{values.religionFilter}</strong> &nbsp;</span>}
+                                        {values.categoryFilter !== "all" && <span>Category: <strong>{FIELD_GROUPS[values.categoryFilter]?.label || values.categoryFilter}</strong></span>}
+                                    </Typography>
                                 </Box>
                             </Stack>
 
@@ -688,118 +825,133 @@ const MissingMembersTable = () => {
                                     No members match the current filters.
                                 </Alert>
                             ) : (
-                                <Paper>
-                                    <TableContainer sx={{ maxHeight: '70vh', overflow: 'auto' }}>
-                                        <Table stickyHeader size="small">
-                                            <TableHead>
-                                                <TableRow>
-                                                    <TableCell sx={{ fontWeight: "bold", bgcolor: 'primary.main', color: 'white' }}>S. No</TableCell>
-                                                    <TableCell sx={{ fontWeight: "bold", bgcolor: 'primary.main', color: 'white' }}>Member Name</TableCell>
-                                                    <TableCell sx={{ fontWeight: "bold", bgcolor: 'primary.main', color: 'white' }}>Membership No</TableCell>
-                                                    <TableCell sx={{ fontWeight: "bold", bgcolor: 'primary.main', color: 'white' }}>Phone No</TableCell>
+                                <TableContainer component={Paper} sx={{ maxHeight: '70vh', overflow: 'auto' }}>
+                                    <Table stickyHeader size="small">
+                                        <TableHead>
+                                            <TableRow>
+                                                <TableCell sx={{ fontWeight: "bold", bgcolor: 'primary.main', color: 'white' }}>S. No</TableCell>
+                                                <TableCell sx={{ fontWeight: "bold", bgcolor: 'primary.main', color: 'white' }}>Member Name</TableCell>
+                                                <TableCell sx={{ fontWeight: "bold", bgcolor: 'primary.main', color: 'white' }}>Membership No</TableCell>
+                                                <TableCell sx={{ fontWeight: "bold", bgcolor: 'primary.main', color: 'white' }}>Phone No</TableCell>
+                                                <TableCell sx={{ fontWeight: "bold", bgcolor: 'primary.main', color: 'white' }}>
+                                                    {ALL_FIELDS[values.selectedField]} Status
+                                                </TableCell>
+                                                {values.selectedField === "bankDetails.civilScore" && (
                                                     <TableCell sx={{ fontWeight: "bold", bgcolor: 'primary.main', color: 'white' }}>
-                                                        {ALL_FIELDS[values.selectedField]} Status
+                                                        Civil Score Value
                                                     </TableCell>
-                                                    <TableCell sx={{ fontWeight: "bold", bgcolor: 'primary.main', color: 'white' }}>Actions</TableCell>
-                                                </TableRow>
-                                            </TableHead>
+                                                )}
+                                                <TableCell sx={{ fontWeight: "bold", bgcolor: 'primary.main', color: 'white' }}>Actions</TableCell>
+                                            </TableRow>
+                                        </TableHead>
 
-                                            <TableBody>
-                                                {paginatedMembers.map((m, idx) => {
-                                                    const fieldValue = getValueByPath(m, values.selectedField);
-                                                    const isFieldMissing = isMissing(fieldValue);
-                                                    const civilScore = getValueByPath(m, "bankDetails.civilScore");
-                                                    const civilScoreStatus = getCivilScoreStatus(civilScore);
+                                        <TableBody>
+                                            {filteredMembers.map((m, idx) => {
+                                                const fieldValue = getValueByPath(m, values.selectedField);
+                                                const isFieldMissing = isMissing(fieldValue);
+                                                const civilScore = getValueByPath(m, "bankDetails.civilScore");
+                                                const civilScoreStatus = getCivilScoreStatus(civilScore);
 
-                                                    return (
-                                                        <TableRow
-                                                            key={m._id || idx}
-                                                            sx={{
-                                                                "&:nth-of-type(odd)": { backgroundColor: "#fafafa" },
-                                                                "&:hover": { backgroundColor: "#f0f0f0", cursor: "pointer" },
-                                                                backgroundColor: isFieldMissing ? "#ffebee" : "inherit"
-                                                            }}
-                                                            onClick={() => handleViewDetails(m)}
-                                                        >
-                                                            <TableCell>{page * rowsPerPage + idx + 1}</TableCell>
+                                                return (
+                                                    <TableRow
+                                                        key={m._id || idx}
+                                                        sx={{
+                                                            "&:nth-of-type(odd)": { backgroundColor: "#fafafa" },
+                                                            "&:hover": { backgroundColor: "#f0f0f0", cursor: "pointer" },
+                                                            backgroundColor: isFieldMissing ? "#ffebee" : "inherit"
+                                                        }}
+                                                        onClick={() => handleViewDetails(m)}
+                                                    >
+                                                        <TableCell>{idx + 1}</TableCell>
+                                                        <TableCell>
+                                                            {getValueByPath(m, "personalDetails.nameOfMember") || "—"}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {getValueByPath(m, "personalDetails.membershipNumber") || "—"}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {getValueByPath(m, "personalDetails.phoneNo") || "—"}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {values.selectedField === "bankDetails.civilScore" ? (
+                                                                <Chip
+                                                                    label={
+                                                                        civilScoreStatus === "missing" ? "MISSING" :
+                                                                            civilScoreStatus === "excellent" ? "EXCELLENT" :
+                                                                                civilScoreStatus === "good" ? "GOOD" :
+                                                                                    civilScoreStatus === "poor" ? "POOR" : "INVALID"
+                                                                    }
+                                                                    color={
+                                                                        civilScoreStatus === "missing" ? "default" :
+                                                                            civilScoreStatus === "excellent" ? "success" :
+                                                                                civilScoreStatus === "good" ? "warning" :
+                                                                                    civilScoreStatus === "poor" ? "error" : "error"
+                                                                    }
+                                                                    size="small"
+                                                                />
+                                                            ) : (
+                                                                <Chip
+                                                                    label={isFieldMissing ? "MISSING" : "AVAILABLE"}
+                                                                    color={isFieldMissing ? "error" : "success"}
+                                                                    size="small"
+                                                                />
+                                                            )}
+                                                        </TableCell>
+
+                                                        {/* Civil Score Value Column */}
+                                                        {values.selectedField === "bankDetails.civilScore" && (
                                                             <TableCell>
-                                                                {getValueByPath(m, "personalDetails.nameOfMember") || "—"}
-                                                            </TableCell>
-                                                            <TableCell>
-                                                                {getValueByPath(m, "personalDetails.membershipNumber") || "—"}
-                                                            </TableCell>
-                                                            <TableCell>
-                                                                {getValueByPath(m, "personalDetails.phoneNo") || "—"}
-                                                            </TableCell>
-                                                            <TableCell>
-                                                                {values.selectedField === "bankDetails.civilScore" ? (
-                                                                    <Chip
-                                                                        label={
-                                                                            civilScoreStatus === "missing" ? "MISSING" :
-                                                                                civilScoreStatus === "excellent" ? "EXCELLENT" :
-                                                                                    civilScoreStatus === "good" ? "GOOD" :
-                                                                                        civilScoreStatus === "poor" ? "POOR" : "INVALID"
-                                                                        }
-                                                                        color={
-                                                                            civilScoreStatus === "missing" ? "default" :
-                                                                                civilScoreStatus === "excellent" ? "success" :
-                                                                                    civilScoreStatus === "good" ? "warning" :
-                                                                                        civilScoreStatus === "poor" ? "error" : "error"
-                                                                        }
-                                                                        size="small"
-                                                                    />
+                                                                {civilScore ? (
+                                                                    <Typography
+                                                                        variant="body2"
+                                                                        sx={{
+                                                                            fontWeight: 'bold',
+                                                                            color:
+                                                                                civilScoreStatus === "excellent" ? '#2e7d32' :
+                                                                                    civilScoreStatus === "good" ? '#ed6c02' :
+                                                                                        civilScoreStatus === "poor" ? '#d32f2f' : '#757575'
+                                                                        }}
+                                                                    >
+                                                                        {civilScore}
+                                                                    </Typography>
                                                                 ) : (
-                                                                    <Chip
-                                                                        label={isFieldMissing ? "MISSING" : "AVAILABLE"}
-                                                                        color={isFieldMissing ? "error" : "success"}
-                                                                        size="small"
-                                                                    />
+                                                                    <Typography variant="body2" color="text.secondary">
+                                                                        —
+                                                                    </Typography>
                                                                 )}
                                                             </TableCell>
+                                                        )}
 
-                                                            <TableCell>
-                                                                <Box sx={{ display: 'flex', gap: 1 }}>
-                                                                    <IconButton
-                                                                        size="small"
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            handleViewDetails(m);
-                                                                        }}
-                                                                        title="View Details"
-                                                                        color="primary"
-                                                                    >
-                                                                        <VisibilityIcon />
-                                                                    </IconButton>
-                                                                    <IconButton
-                                                                        size="small"
-                                                                        onClick={(e) => handleDeleteClick(m, e)}
-                                                                        title="Delete Member"
-                                                                        color="error"
-                                                                        disabled={operationLoading.delete}
-                                                                    >
-                                                                        <DeleteIcon />
-                                                                    </IconButton>
-                                                                </Box>
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    );
-                                                })}
-                                            </TableBody>
-                                        </Table>
-                                    </TableContainer>
-                                    <TablePagination
-                                        component="div"
-                                        count={filteredMembers.length}
-                                        page={page}
-                                        onPageChange={(e, newPage) => setPage(newPage)}
-                                        rowsPerPage={rowsPerPage}
-                                        onRowsPerPageChange={(e) => {
-                                            setRowsPerPage(parseInt(e.target.value, 10));
-                                            setPage(0);
-                                        }}
-                                        rowsPerPageOptions={[5, 10, 25, 50, 100]}
-                                    />
-                                </Paper>
+                                                        <TableCell>
+                                                            <Box sx={{ display: 'flex', gap: 1 }}>
+                                                                <IconButton
+                                                                    size="small"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleViewDetails(m);
+                                                                    }}
+                                                                    title="View Details"
+                                                                    color="primary"
+                                                                >
+                                                                    <VisibilityIcon />
+                                                                </IconButton>
+                                                                <IconButton
+                                                                    size="small"
+                                                                    onClick={(e) => handleDeleteClick(m, e)}
+                                                                    title="Delete Member"
+                                                                    color="error"
+                                                                    disabled={operationLoading.delete}
+                                                                >
+                                                                    <DeleteIcon />
+                                                                </IconButton>
+                                                            </Box>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                );
+                                            })}
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
                             )}
                         </Form>
                     );

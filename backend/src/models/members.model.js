@@ -37,9 +37,16 @@ const memberSchema = new mongoose.Schema(
       maritalStatus: { type: String },
       religion: { type: String },
       caste: { type: String },
-      phoneNo: { type: String },
+      phoneNo1: { type: String },
+      phoneNo2: { type: String },
+      phoneNo3:{type:String},
       alternatePhoneNo: { type: String },
-      emailId: { type: String },
+      emailId1: { type: String },
+      emailId2:{type:String},
+      emailId3:{type:String},
+      landlineNo: { type: String  },
+      landlineOffice:{type:String},
+
     },
 
     // ===== ADDRESS DETAILS =====

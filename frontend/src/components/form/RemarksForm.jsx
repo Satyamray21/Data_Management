@@ -27,10 +27,10 @@ const RemarksForm = ({ formData, handleChange }) => {
   const theme = useTheme();
 
   // Family Members - ensure it's always an array
- 
+
   // Change this line - get familyMembers from professionalDetails
-  const familyMembers = Array.isArray(formData.professionalDetails?.familyMembers) 
-    ? formData.professionalDetails.familyMembers 
+  const familyMembers = Array.isArray(formData.professionalDetails?.familyMembers)
+    ? formData.professionalDetails.familyMembers
     : [];
 
   // Change this line - get hasFamilyMember from professionalDetails
@@ -70,7 +70,7 @@ const RemarksForm = ({ formData, handleChange }) => {
     handleChange("professionalDetails", "familyMembers", updatedFamilyMembers);
   };
 
- 
+
   // Nominee Details
   const nominee = formData.nomineeDetails || {
     nomineeName: "",
@@ -97,7 +97,7 @@ const RemarksForm = ({ formData, handleChange }) => {
     }
   };
 
-  
+
 
 
 
@@ -110,7 +110,7 @@ const RemarksForm = ({ formData, handleChange }) => {
     handleChange("nomineeDetails", null, updatedNominee);
   };
 
- 
+
 
 
   return (
