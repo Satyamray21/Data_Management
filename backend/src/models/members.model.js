@@ -230,6 +230,11 @@ const memberSchema = new mongoose.Schema(
       introduceBy: { type: String },
       memberShipNo: { type: String },
     },
+    financialDetails:{
+      shareCapital: { type: String },
+      optionalDeposit: { type: String },
+      compulsory: { type: String},
+    }
   },
   { timestamps: true }
 );
