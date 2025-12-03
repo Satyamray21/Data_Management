@@ -39,7 +39,7 @@ const memberSchema = new mongoose.Schema(
       caste: { type: String },
       phoneNo1: { type: String },
       phoneNo2: { type: String },
-      phoneNo3:{type:String},
+      whatsapp:{type:String},
       alternatePhoneNo: { type: String },
       emailId1: { type: String },
       emailId2:{type:String},

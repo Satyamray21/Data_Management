@@ -58,9 +58,15 @@ const MemberDossierForm = () => {
       religion: "",
       maritalStatus: "",
       caste: "",
-      phoneNo: "",
+      phoneNo1: "",
+      phoneNo2:"",
+      whatsapp:"",
       alternatePhoneNo: "",
-      emailId: "",
+      emailId1: "",
+      emailId2:"",
+      emailId3:"",
+      landlineNo:"",
+      landlineOffice:"",
     },
 
     Address: {

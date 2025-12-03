@@ -6,43 +6,20 @@ import SectionHeader from "../../layout/SectionHeader";
 import Autocomplete from "@mui/material/Autocomplete";
 
 const PersonalInfoForm = ({ formData, handleChange }) => {
-  const personalInfo = formData.personalInformation;
+  const personalInfo = formData.personalDetails || formData.personalInformation || {};
   const [dobError, setDobError] = useState("");
-  const [civilScoreText, setCivilScoreText] = useState("");
   const theme = useTheme();
 
   const handleFieldChange = (field, value) => {
-    handleChange("personalInformation", field, value);
+    if (formData.personalDetails) {
+      handleChange("personalDetails", field, value);
+    } else {
+      handleChange("personalInformation", field, value);
+    }
   };
 
   // Civil Score logic
-  const handleCivilScoreChange = (score) => {
-    handleFieldChange("civilScore", score);
-
-    if (!score) {
-      setCivilScoreText("");
-      return;
-    }
-
-    const numericScore = parseInt(score);
-    if (isNaN(numericScore)) {
-      setCivilScoreText("Invalid score");
-      return;
-    }
-
-    if (numericScore >= 300 && numericScore <= 550) {
-      setCivilScoreText("Poor");
-    } else if (numericScore >= 551 && numericScore <= 650) {
-      setCivilScoreText("Average");
-    } else if (numericScore >= 651 && numericScore <= 750) {
-      setCivilScoreText("Good");
-    } else if (numericScore >= 751 && numericScore <= 900) {
-      setCivilScoreText("Excellent");
-    } else {
-      setCivilScoreText("Invalid Score");
-    }
-  };
-
+  
 
   const ComboBox = ({ label, fieldName, value, options }) => {
     const [inputValue, setInputValue] = useState(value || "");
@@ -71,7 +48,7 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
             borderRadius: 2,
             backgroundColor: alpha(theme.palette.background.paper, 0.8),
             transition: 'all 0.2s ease-in-out',
-            height: '56px', // Fixed height
+            height: '56px',
             '&:hover': {
               backgroundColor: alpha(theme.palette.background.paper, 0.9),
             },
@@ -81,7 +58,7 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
             }
           },
           '& .MuiAutocomplete-input': {
-            padding: '8.5px 4px 8.5px 6px !important', // Match textfield padding
+            padding: '8.5px 4px 8.5px 6px !important',
           }
         }}
         renderInput={(params) => (
@@ -94,7 +71,7 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
                 fontWeight: 500,
               },
               '& .MuiInputBase-root': {
-                height: '56px', // Consistent height
+                height: '56px',
               }
             }}
           />
@@ -109,7 +86,7 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
 
     if (!dateString) {
       handleFieldChange("ageInYears", "");
-      handleFieldChange("isMinor", "");
+      handleFieldChange("minor", "");
       setDobError("");
       return;
     }
@@ -130,20 +107,20 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
       months += 12;
     }
 
-    const isMinor = years < 18 ? "Yes" : "No";
+    const isMinor = years < 18 ? true : false;
     setDobError("");
 
     handleFieldChange("ageInYears", `${years} years, ${months} months`);
-    handleFieldChange("isMinor", isMinor);
+    handleFieldChange("minor", isMinor);
   };
 
-  // Common text field styles
+ 
   const textFieldStyles = {
     '& .MuiOutlinedInput-root': {
       borderRadius: 2,
       backgroundColor: alpha(theme.palette.background.paper, 0.8),
       transition: 'all 0.2s ease-in-out',
-      height: '56px', // Fixed height for all text fields
+      height: '56px',
       '&:hover': {
         backgroundColor: alpha(theme.palette.background.paper, 0.9),
       },
@@ -217,7 +194,7 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
 
         <Grid container spacing={3}>
 
-          {/* Membership Number */}
+         
           <Grid size={{ xs: 12, md: 3 }}>
             <StyledTextField
               label="Membership No."
@@ -230,7 +207,7 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
             />
           </Grid>
 
-          {/* Membership Date */}
+         
           <Grid size={{ xs: 12, md: 3 }}>
             <StyledTextField
               label="Membership Date"
@@ -245,60 +222,11 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
             />
           </Grid>
 
-          {/* Credit Amount */}
-          <Grid size={{ xs: 12, md: 3 }}>
-            <StyledTextField
-              label="Amount in Credit"
-              name="amountInCredit"
-              type="number"
-              value={personalInfo.amountInCredit || ""}
-              onChange={(e) =>
-                handleFieldChange("amountInCredit", e.target.value)
-              }
-              sx={textFieldStyles}
-              InputProps={{
-                startAdornment: (
-                  <Box component="span" sx={{ color: 'text.secondary', mr: 1 }}>
-                    ₹
-                  </Box>
-                ),
-              }}
-            />
-          </Grid>
+        
+          
 
-          {/* Civil Score */}
-          <Grid size={{ xs: 12, md: 3 }}>
-            <Box sx={{ position: 'relative' }}>
-              <StyledTextField
-                label="Civil Score"
-                name="civilScore"
-                type="number"
-                value={personalInfo.civilScore || ""}
-                onChange={(e) => handleCivilScoreChange(e.target.value)}
-                sx={textFieldStyles}
-                InputProps={{
-                  endAdornment: (
-                    <Box
-                      component="span"
-                      sx={{
-                        color: civilScoreText === "Excellent" ? 'success.main' :
-                          civilScoreText === "Good" ? 'warning.main' :
-                            civilScoreText === "Poor" ? 'error.main' : 'text.secondary',
-                        fontWeight: 600,
-                        fontSize: '0.8rem',
-                        minWidth: 80,
-                        textAlign: 'right'
-                      }}
-                    >
-                      {civilScoreText}
-                    </Box>
-                  ),
-                }}
-              />
-            </Box>
-          </Grid>
-
-          {/* Title ComboBox */}
+          
+          
           <Grid size={{ xs: 12, md: 2 }}>
             <Box sx={{ position: 'relative' }}>
               <ComboBox
@@ -310,7 +238,7 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
             </Box>
           </Grid>
 
-          {/* Name of Member */}
+          
           <Grid size={{ xs: 12, md: 4 }}>
             <StyledTextField
               label="Name of Member"
@@ -321,7 +249,7 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
             />
           </Grid>
 
-          {/* Father Title + Name */}
+          
           <Grid size={{ xs: 12, md: 2 }}>
             <ComboBox
               label="Father Title"
@@ -340,7 +268,7 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
             />
           </Grid>
 
-          {/* Mother Title + Name */}
+          
           <Grid size={{ xs: 12, md: 2 }}>
             <ComboBox
               label="Mother Title"
@@ -359,7 +287,7 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
             />
           </Grid>
 
-          {/* DOB */}
+          
           <Grid size={{ xs: 12, md: 3 }}>
             <StyledTextField
               label="Date of Birth"
@@ -374,7 +302,7 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
             />
           </Grid>
 
-          {/* Age */}
+        
           <Grid size={{ xs: 12, md: 3 }}>
             <StyledTextField
               label="Age in Years"
@@ -390,18 +318,18 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
             />
           </Grid>
 
-          {/* Minor */}
+         
           <Grid size={{ xs: 12, md: 2 }}>
             <ComboBox
               label="Minor"
-              fieldName="isMinor"
-              value={personalInfo.isMinor}
+              fieldName="minor"
+              value={personalInfo.minor ? "Yes" : "No"}
               options={["Yes", "No"]}
             />
           </Grid>
 
-          {/* Guardian Fields (if minor) */}
-          {personalInfo.isMinor === "Yes" && (
+          
+          {personalInfo.minor === true && (
             <>
               <Grid size={{ xs: 12, md: 4 }}>
                 <StyledTextField
@@ -431,7 +359,7 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
             </>
           )}
 
-          {/* Gender */}
+          
           <Grid size={{ xs: 12, md: 2 }}>
             <ComboBox
               label="Gender"
@@ -441,7 +369,7 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
             />
           </Grid>
 
-          {/* Religion */}
+          
           <Grid size={{ xs: 12, md: 2 }}>
             <ComboBox
               label="Religion"
@@ -458,7 +386,7 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
             />
           </Grid>
 
-          {/* Marital Status */}
+          
           <Grid size={{ xs: 12, md: 3 }}>
             <ComboBox
               label="Marital Status"
@@ -468,7 +396,7 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
             />
           </Grid>
 
-          {/* Spouse Fields */}
+         
           {personalInfo.maritalStatus === "Married" && (
             <Grid size={{ xs: 12, md: 4 }}>
               <Grid container spacing={2}>
@@ -493,7 +421,7 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
             </Grid>
           )}
 
-          {/* Caste */}
+          
           <Grid size={{ xs: 12, md: 3 }}>
             <ComboBox
               label="Caste"
@@ -503,7 +431,7 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
             />
           </Grid>
 
-          {/* Contact Information Section Visual Break */}
+          
           <Grid size={{ xs: 12 }}>
             <Box
               sx={{
@@ -523,38 +451,90 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
             />
           </Grid>
 
-          {/* Phone */}
+         
           <Grid size={{ xs: 12, md: 4 }}>
             <StyledTextField
-              label="Phone Number"
-              name="phoneNo"
-              value={personalInfo.phoneNo || ""}
-              onChange={(e) => handleFieldChange("phoneNo", e.target.value)}
+              label="Phone No. 1"
+              name="phoneNo1"
+              value={personalInfo.phoneNo1 || ""}
+              onChange={(e) => handleFieldChange("phoneNo1", e.target.value)}
               sx={textFieldStyles}
             />
           </Grid>
 
-          {/* Alternate Phone */}
           <Grid size={{ xs: 12, md: 4 }}>
             <StyledTextField
-              label="Alternate Phone Number"
-              name="alternatePhoneNo"
-              value={personalInfo.alternatePhoneNo || ""}
-              onChange={(e) =>
-                handleFieldChange("alternatePhoneNo", e.target.value)
-              }
+              label="Phone No. 2"
+              name="phoneNo2"
+              value={personalInfo.phoneNo2 || ""}
+              onChange={(e) => handleFieldChange("phoneNo2", e.target.value)}
               sx={textFieldStyles}
             />
           </Grid>
 
-          {/* Email */}
+        
           <Grid size={{ xs: 12, md: 4 }}>
             <StyledTextField
-              label="Email Id"
-              name="emailId"
+              label="WhatsApp Number"
+              name="whatsapp"
+              value={personalInfo.whatsapp || ""}
+              onChange={(e) => handleFieldChange("whatsapp", e.target.value)}
+              sx={textFieldStyles}
+            />
+          </Grid>
+
+         
+          <Grid size={{ xs: 12, md: 4 }}>
+            <StyledTextField
+              label="Landline No."
+              name="landlineNo"
+              value={personalInfo.landlineNo || ""}
+              onChange={(e) => handleFieldChange("landlineNo", e.target.value)}
+              sx={textFieldStyles}
+            />
+          </Grid>
+
+          
+          <Grid size={{ xs: 12, md: 4 }}>
+            <StyledTextField
+              label="Office Landline No."
+              name="landlineOffice"
+              value={personalInfo.landlineOffice || ""}
+              onChange={(e) => handleFieldChange("landlineOffice", e.target.value)}
+              sx={textFieldStyles}
+            />
+          </Grid>
+
+          
+          <Grid size={{ xs: 12, md: 4 }}>
+            <StyledTextField
+              label="Email 1"
+              name="emailId1"
               type="email"
-              value={personalInfo.emailId || ""}
-              onChange={(e) => handleFieldChange("emailId", e.target.value)}
+              value={personalInfo.emailId1 || ""}
+              onChange={(e) => handleFieldChange("emailId1", e.target.value)}
+              sx={textFieldStyles}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, md: 4 }}>
+            <StyledTextField
+              label="Email 2"
+              name="emailId2"
+              type="email"
+              value={personalInfo.emailId2 || ""}
+              onChange={(e) => handleFieldChange("emailId2", e.target.value)}
+              sx={textFieldStyles}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, md: 4 }}>
+            <StyledTextField
+              label="Email 3"
+              name="emailId3"
+              type="email"
+              value={personalInfo.emailId3 || ""}
+              onChange={(e) => handleFieldChange("emailId3", e.target.value)}
               sx={textFieldStyles}
             />
           </Grid>
