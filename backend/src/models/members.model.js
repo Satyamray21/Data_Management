@@ -46,6 +46,7 @@ const memberSchema = new mongoose.Schema(
       emailId3:{type:String},
       landlineNo: { type: String  },
       landlineOffice:{type:String},
+      civilScore:{type:String},
 
     },
 

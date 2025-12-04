@@ -8,6 +8,7 @@ import Autocomplete from "@mui/material/Autocomplete";
 const PersonalInfoForm = ({ formData, handleChange }) => {
   const personalInfo = formData.personalDetails || formData.personalInformation || {};
   const [dobError, setDobError] = useState("");
+  const [civilScoreText, setCivilScoreText] = useState("");
   const theme = useTheme();
 
   const handleFieldChange = (field, value) => {
@@ -19,7 +20,32 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
   };
 
   // Civil Score logic
-  
+  const handleCivilScoreChange = (score) => {
+    handleFieldChange("civilScore", score);
+
+    if (!score) {
+      setCivilScoreText("");
+      return;
+    }
+
+    const numericScore = parseInt(score);
+    if (isNaN(numericScore)) {
+      setCivilScoreText("Invalid score");
+      return;
+    }
+
+    if (numericScore >= 300 && numericScore <= 550) {
+      setCivilScoreText("Poor");
+    } else if (numericScore >= 551 && numericScore <= 650) {
+      setCivilScoreText("Average");
+    } else if (numericScore >= 651 && numericScore <= 750) {
+      setCivilScoreText("Good");
+    } else if (numericScore >= 751 && numericScore <= 900) {
+      setCivilScoreText("Excellent");
+    } else {
+      setCivilScoreText("Invalid Score");
+    }
+  };
 
   const ComboBox = ({ label, fieldName, value, options }) => {
     const [inputValue, setInputValue] = useState(value || "");
@@ -359,7 +385,37 @@ const PersonalInfoForm = ({ formData, handleChange }) => {
             </>
           )}
 
-          
+           <Grid size={{ xs: 12, md: 3 }}>
+            <Box sx={{ position: 'relative' }}>
+              <StyledTextField
+                label="Civil Score"
+                name="civilScore"
+                type="number"
+                value={personalInfo.civilScore || ""}
+                onChange={(e) => handleCivilScoreChange(e.target.value)}
+                sx={textFieldStyles}
+                InputProps={{
+                  endAdornment: (
+                    <Box
+                      component="span"
+                      sx={{
+                        color: civilScoreText === "Excellent" ? 'success.main' :
+                          civilScoreText === "Good" ? 'warning.main' :
+                            civilScoreText === "Poor" ? 'error.main' : 'text.secondary',
+                        fontWeight: 600,
+                        fontSize: '0.8rem',
+                        minWidth: 80,
+                        textAlign: 'right'
+                      }}
+                    >
+                      {civilScoreText}
+                    </Box>
+                  ),
+                }}
+              />
+            </Box>
+          </Grid>
+
           <Grid size={{ xs: 12, md: 2 }}>
             <ComboBox
               label="Gender"

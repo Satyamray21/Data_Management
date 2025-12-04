@@ -67,6 +67,7 @@ const MemberDossierForm = () => {
       emailId3:"",
       landlineNo:"",
       landlineOffice:"",
+      civilScore:"",
     },
 
     Address: {

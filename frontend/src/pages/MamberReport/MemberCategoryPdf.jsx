@@ -79,6 +79,8 @@ export const FIELD_MAP = {
     "financialDetails.shareCapital":"Share Capital",
     "financialDetails.optionalDeposit": "Optional Deposit",
     "financialDetails.compulsory":"Compulsory Deposit",
+
+    "personalDetails.civilScore":"Cibil Score"
 };
 
 export const CATEGORY_MAP = {
@@ -90,6 +92,7 @@ export const CATEGORY_MAP = {
     nomineeDetails: "Nominee Details",
     introductionDetails: "Introduction/Witness By",
     financialDetails : "Financial Details As of 31/03/2025",
+    creditScoreDetails: "CIBIL Score Details",
 };
 
 // Helper functions
@@ -383,6 +386,8 @@ export const getFieldsByCategory = (member, category, viewType = "all") => {
             !["nomineeDetails.memberShipNo", "nomineeDetails.introduceBy"].includes(key)
         );
 
+        
+
         return nomineeFields.filter(key => {
             const value = getValueByPath(member, key);
             if (viewType === "all") return true;
@@ -391,7 +396,9 @@ export const getFieldsByCategory = (member, category, viewType = "all") => {
             return true;
         });
     }
-
+if (category === "creditScoreDetails") {
+    return ["personalDetails.civilScore"];
+}
     if (category === "all") {
         const filtered = filteredKeys.filter(key => {
             // witness fields को exclude करें
@@ -565,6 +572,8 @@ export const generateMemberFieldsPDF = async (member, category, viewType = "all"
 
     // Function to add category section (updated version with introduction section)
     const addCategorySection = (doc, categoryKey, categoryName, fields, startY) => {
+
+
         if (fields.length === 0 && categoryKey !== "introductionDetails") return startY;
 
         // Add category header
