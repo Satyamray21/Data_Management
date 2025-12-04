@@ -11,20 +11,20 @@ export const FIELD_MAP = {
     "personalDetails.motherCombinedName": "Mother's Name",
     "personalDetails.dateOfBirth": "Date of Birth",
     "personalDetails.ageInYears": "Age (Years)",
-    "personalDetails.minor": "Is Minor",
+    "personalDetails.minor": "Minor",
     "personalDetails.gender": "Gender",
     "personalDetails.religion": "Religion",
     "personalDetails.caste": "Caste",
     "personalDetails.maritalStatus": "Marital Status",
 
-    "personalDetails.phoneNo1": "Mobile Number 1",
-    "personalDetails.phoneNo2":" Mobile Number 2",
-    "personalDetails.whatsapp":" WhatsApp Number",
+    "personalDetails.phoneNo1": "Primary Number",
+    "personalDetails.phoneNo2":"Secondary Number",
+    "personalDetails.whatsapp":"WhatsApp Number",
     "personalDetails.landlineNo": "Residence Landline  Number",
     "personalDetails.landlineOffice":"Office Landline  Number",
-    "personalDetails.emailId1": "Email 1",
-    "personalDetails.emailId2": "Email 2",
-    "personalDetails.emailId3":"Email 3",
+    "personalDetails.emailId1": "Primary Email",
+    "personalDetails.emailId2": "Secondary Email",
+    "personalDetails.emailId3":"Optional Email",
     "personalDetails.nameOfSpouse": "Spouse's Name",
 
 
@@ -70,12 +70,12 @@ export const FIELD_MAP = {
     
     "familyDetails.familyMember": "Family Member Names",
     "familyDetails.familyMemberNo": "Family Membership Number",
-    "familyDetails.relationWithApplicant": "Relation With Applicant",
+    "familyDetails.relationWithApplicant": "Relation With Member",
 
 
     "nomineeDetails.nomineeName": "Nominee Name",
-    "nomineeDetails.relationWithApplicant": "Relation with Applicant",
-    "nomineeDetails.nomineeMobileNo": "Nominee Mobile No",
+    "nomineeDetails.relationWithApplicant": "Relation with Member",
+    "nomineeDetails.nomineeMobileNo": "Nominee Contact Number",
     "financialDetails.shareCapital":"Share Capital",
     "financialDetails.optionalDeposit": "Optional Deposit",
     "financialDetails.compulsory":"Compulsory Deposit",
