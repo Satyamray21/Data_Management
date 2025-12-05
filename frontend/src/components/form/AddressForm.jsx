@@ -20,7 +20,7 @@ import {
 } from "@mui/icons-material";
 import StyledTextField from "../../ui/StyledTextField";
 import SectionHeader from "../../layout/SectionHeader";
-
+import CountryStateCity from "../CountryStateCity";
 const AddressForm = ({ formData, handleChange, handleNestedChange }) => {
   const addressData = formData.Address;
   const theme = useTheme();
@@ -89,249 +89,174 @@ const AddressForm = ({ formData, handleChange, handleNestedChange }) => {
   };
 
   const renderAddressFields = (addressType, values, title, icon) => (
-    <Box>
-      {title && (
-        <Box
+  <Box>
+    {title && (
+      <Box
+        sx={{
+          background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+          color: "#fff",
+          px: 2,
+          py: 1.5,
+          mb: 2,
+          borderRadius: 2,
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+        }}
+      >
+        {icon}
+        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+          {title}
+        </Typography>
+      </Box>
+    )}
+
+    <Grid container spacing={2}>
+      {/* Flat / House */}
+      <Grid size={{ xs: 12, md: 6 }}>
+        <StyledTextField
+          label="Flat No. / House No. / Building"
+          name={`${addressType}.flatHouseNo`}
+          value={values.flatHouseNo || ""}
+          onChange={(e) =>
+            handleAddressFieldChange(addressType, "flatHouseNo", e.target.value)
+          }
           sx={{
-            background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-            color: "#fff",
-            px: 2,
-            py: 1.5,
-            mb: 2,
+            "& .MuiOutlinedInput-root": {
+              borderRadius: 2,
+              backgroundColor: alpha(theme.palette.background.paper, 0.8),
+              height: "56px",
+            },
+          }}
+        />
+      </Grid>
+
+      {/* Area / Street */}
+      <Grid size={{ xs: 12, md: 6 }}>
+        <StyledTextField
+          label="Area / Street / Sector"
+          name={`${addressType}.areaStreetSector`}
+          value={values.areaStreetSector || ""}
+          onChange={(e) =>
+            handleAddressFieldChange(
+              addressType,
+              "areaStreetSector",
+              e.target.value
+            )
+          }
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              borderRadius: 2,
+              backgroundColor: alpha(theme.palette.background.paper, 0.8),
+              height: "56px",
+            },
+          }}
+        />
+      </Grid>
+
+      {/* Locality */}
+      <Grid size={{ xs: 12, md: 6 }}>
+        <StyledTextField
+          label="Locality"
+          name={`${addressType}.locality`}
+          value={values.locality || ""}
+          onChange={(e) =>
+            handleAddressFieldChange(addressType, "locality", e.target.value)
+          }
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              borderRadius: 2,
+              backgroundColor: alpha(theme.palette.background.paper, 0.8),
+              height: "56px",
+            },
+          }}
+        />
+      </Grid>
+
+      {/* Landmark */}
+      <Grid size={{ xs: 12, md: 6 }}>
+        <StyledTextField
+          label="Landmark"
+          name={`${addressType}.landmark`}
+          value={values.landmark || ""}
+          onChange={(e) =>
+            handleAddressFieldChange(addressType, "landmark", e.target.value)
+          }
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              borderRadius: 2,
+              backgroundColor: alpha(theme.palette.background.paper, 0.8),
+              height: "56px",
+            },
+          }}
+        />
+      </Grid>
+
+      {/* 🔥 NEW — Country → State → City Component */}
+      <Grid size={{ xs: 12 }}>
+        <CountryStateCity
+          onChange={({ country, state, city }) => {
+            handleAddressFieldChange(
+              addressType,
+              "country",
+              country?.name || ""
+            );
+            handleAddressFieldChange(addressType, "state", state?.name || "");
+            handleAddressFieldChange(addressType, "city", city?.name || "");
+          }}
+        />
+      </Grid>
+
+      {/* Pincode */}
+      <Grid size={{ xs: 12, md: 6 }}>
+        <StyledTextField
+          label="Pincode"
+          name={`${addressType}.pincode`}
+          value={values.pincode || ""}
+          onChange={(e) => {
+            const onlyNums = e.target.value.replace(/[^0-9]/g, "");
+            handleAddressFieldChange(addressType, "pincode", onlyNums);
+          }}
+          inputProps={{ maxLength: 6 }}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              borderRadius: 2,
+              backgroundColor: alpha(theme.palette.background.paper, 0.8),
+              height: "56px",
+            },
+          }}
+        />
+      </Grid>
+
+      {/* File Upload */}
+      <Grid size={{ xs: 12 }}>
+        <Button
+          variant="outlined"
+          component="label"
+          fullWidth
+          startIcon={<UploadFileIcon />}
+          sx={{
+            height: "56px",
             borderRadius: 2,
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
           }}
         >
-          {icon}
-          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-            {title}
-          </Typography>
-        </Box>
-      )}
-
-      <Grid container spacing={2}>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <StyledTextField
-            label="Flat No. / House No. / Building"
-            name={`${addressType}.flatHouseNo`}
-            value={values.flatHouseNo || ""}
-            onChange={(e) => handleAddressFieldChange(addressType, 'flatHouseNo', e.target.value)}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-                backgroundColor: alpha(theme.palette.background.paper, 0.8),
-                transition: 'all 0.2s ease-in-out',
-                height: '56px',
-                '&:hover': {
-                  backgroundColor: alpha(theme.palette.background.paper, 0.9),
-                },
-                '&.Mui-focused': {
-                  backgroundColor: theme.palette.background.paper,
-                  boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}`,
-                }
-              }
-            }}
+          {values.proofDocument
+            ? `Uploaded: ${values.proofDocument.name}`
+            : "Upload Address Proof Document"}
+          <input
+            type="file"
+            hidden
+            accept="image/*,application/pdf"
+            onChange={(e) =>
+              handleFileUpload(addressType, e.target.files[0])
+            }
           />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <StyledTextField
-            label="Area / Street / Sector"
-            name={`${addressType}.areaStreetSector`}
-            value={values.areaStreetSector || ""}
-            onChange={(e) => handleAddressFieldChange(addressType, 'areaStreetSector', e.target.value)}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-                backgroundColor: alpha(theme.palette.background.paper, 0.8),
-                transition: 'all 0.2s ease-in-out',
-                height: '56px',
-                '&:hover': {
-                  backgroundColor: alpha(theme.palette.background.paper, 0.9),
-                },
-                '&.Mui-focused': {
-                  backgroundColor: theme.palette.background.paper,
-                  boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}`,
-                }
-              }
-            }}
-          />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <StyledTextField
-            label="Locality"
-            name={`${addressType}.locality`}
-            value={values.locality || ""}
-            onChange={(e) => handleAddressFieldChange(addressType, 'locality', e.target.value)}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-                backgroundColor: alpha(theme.palette.background.paper, 0.8),
-                transition: 'all 0.2s ease-in-out',
-                height: '56px',
-                '&:hover': {
-                  backgroundColor: alpha(theme.palette.background.paper, 0.9),
-                },
-                '&.Mui-focused': {
-                  backgroundColor: theme.palette.background.paper,
-                  boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}`,
-                }
-              }
-            }}
-          />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <StyledTextField
-            label="Landmark"
-            name={`${addressType}.landmark`}
-            value={values.landmark || ""}
-            onChange={(e) => handleAddressFieldChange(addressType, 'landmark', e.target.value)}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-                backgroundColor: alpha(theme.palette.background.paper, 0.8),
-                transition: 'all 0.2s ease-in-out',
-                height: '56px',
-                '&:hover': {
-                  backgroundColor: alpha(theme.palette.background.paper, 0.9),
-                },
-                '&.Mui-focused': {
-                  backgroundColor: theme.palette.background.paper,
-                  boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}`,
-                }
-              }
-            }}
-          />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <StyledTextField
-            label="City"
-            name={`${addressType}.city`}
-            value={values.city || ""}
-            onChange={(e) => handleAddressFieldChange(addressType, 'city', e.target.value)}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-                backgroundColor: alpha(theme.palette.background.paper, 0.8),
-                transition: 'all 0.2s ease-in-out',
-                height: '56px',
-                '&:hover': {
-                  backgroundColor: alpha(theme.palette.background.paper, 0.9),
-                },
-                '&.Mui-focused': {
-                  backgroundColor: theme.palette.background.paper,
-                  boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}`,
-                }
-              }
-            }}
-          />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <StyledTextField
-            label="Country"
-            name={`${addressType}.country`}
-            value={values.country || ""}
-            onChange={(e) => handleAddressFieldChange(addressType, 'country', e.target.value)}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-                backgroundColor: alpha(theme.palette.background.paper, 0.8),
-                transition: 'all 0.2s ease-in-out',
-                height: '56px',
-                '&:hover': {
-                  backgroundColor: alpha(theme.palette.background.paper, 0.9),
-                },
-                '&.Mui-focused': {
-                  backgroundColor: theme.palette.background.paper,
-                  boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}`,
-                }
-              }
-            }}
-          />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <StyledTextField
-            label="State"
-            name={`${addressType}.state`}
-            value={values.state || ""}
-            onChange={(e) => handleAddressFieldChange(addressType, 'state', e.target.value)}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-                backgroundColor: alpha(theme.palette.background.paper, 0.8),
-                transition: 'all 0.2s ease-in-out',
-                height: '56px',
-                '&:hover': {
-                  backgroundColor: alpha(theme.palette.background.paper, 0.9),
-                },
-                '&.Mui-focused': {
-                  backgroundColor: theme.palette.background.paper,
-                  boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}`,
-                }
-              }
-            }}
-          />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <StyledTextField
-            label="Pincode"
-            name={`${addressType}.pincode`}
-            value={values.pincode || ""}
-            onChange={(e) => {
-              const onlyNums = e.target.value.replace(/[^0-9]/g, "");
-              handleAddressFieldChange(addressType, 'pincode', onlyNums);
-            }}
-            inputProps={{ maxLength: 6 }}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 2,
-                backgroundColor: alpha(theme.palette.background.paper, 0.8),
-                transition: 'all 0.2s ease-in-out',
-                height: '56px',
-                '&:hover': {
-                  backgroundColor: alpha(theme.palette.background.paper, 0.9),
-                },
-                '&.Mui-focused': {
-                  backgroundColor: theme.palette.background.paper,
-                  boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}`,
-                }
-              }
-            }}
-          />
-        </Grid>
-
-        {/* File Upload */}
-        <Grid size={{ xs: 12 }}>
-          <Button
-            variant="outlined"
-            component="label"
-            fullWidth
-            startIcon={<UploadFileIcon />}
-            sx={{
-              height: '56px',
-              borderRadius: 2,
-              border: `1px solid ${alpha(theme.palette.primary.main, 0.3)}`,
-              '&:hover': {
-                border: `1px solid ${theme.palette.primary.main}`,
-                backgroundColor: alpha(theme.palette.primary.main, 0.04),
-              }
-            }}
-          >
-            {values.proofDocument
-              ? `Uploaded: ${values.proofDocument.name}`
-              : "Upload Address Proof Document"}
-            <input
-              type="file"
-              hidden
-              accept="image/*,application/pdf"
-              onChange={(e) => handleFileUpload(addressType, e.target.files[0])}
-            />
-          </Button>
-        </Grid>
+        </Button>
       </Grid>
-    </Box>
-  );
+    </Grid>
+  </Box>
+);
+
 
   // Check if residence type is selected
   const isResidenceTypeSelected = addressData.residenceType;
