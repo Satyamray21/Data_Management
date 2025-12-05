@@ -236,7 +236,13 @@ const memberSchema = new mongoose.Schema(
       shareCapital: { type: String },
       optionalDeposit: { type: String },
       compulsory: { type: String},
-    }
+    },
+
+    creditDetails:{
+      cibilScore:{
+        type:String
+      },
+    },
   },
   { timestamps: true }
 );

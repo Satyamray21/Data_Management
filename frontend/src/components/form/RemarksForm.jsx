@@ -70,7 +70,7 @@ const RemarksForm = ({ formData, handleChange }) => {
     nomineeName: "",
     relationWithApplicant: "",
     nomineeMobileNo: "",
-     introduceBy: "",
+    introduceBy: "",
     memberShipNo: "",
   };
 
@@ -82,7 +82,7 @@ const RemarksForm = ({ formData, handleChange }) => {
     });
   };
 
- 
+
 
   /* ================= COMMON STYLES ================= */
 
@@ -118,7 +118,7 @@ const RemarksForm = ({ formData, handleChange }) => {
           />
 
           <Typography fontWeight={600} sx={{ mb: 2 }}>
-             Any family member a member of the society?
+            Any family member a member of the society?
           </Typography>
 
           <RadioGroup
