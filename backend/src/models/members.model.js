@@ -186,6 +186,7 @@ const memberSchema = new mongoose.Schema(
 
     // ===== BANK DETAILS =====
     bankDetails: {
+      accountHolderName:{type:String},
       bankName: { type: String },
       branch: { type: String },
       accountNumber: { type: String },

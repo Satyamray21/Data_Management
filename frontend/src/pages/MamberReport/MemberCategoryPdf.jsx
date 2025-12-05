@@ -67,10 +67,12 @@ export const FIELD_MAP = {
     "professionalDetails.businessDetails.businessStructure": "Business Structure",
     "professionalDetails.businessDetails.gstCertificate": "GST Certificate",
 
+    "bankDetails.accountHolderName":"Account Holder Name",
     "bankDetails.bankName": "Bank Name",
     "bankDetails.branch": "Branch",
     "bankDetails.accountNumber": "Account Number",
     "bankDetails.ifscCode": "IFSC Code",
+    
 
     "familyDetails.familyMember": "Member Names",
     "familyDetails.familyMemberNo": "Membership Number",

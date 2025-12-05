@@ -68,7 +68,7 @@ const MemberDossierForm = () => {
       emailId3: "",
       landlineNo: "",
       landlineOffice: "",
-      civilScore: "",
+      
     },
 
     Address: {
@@ -162,6 +162,7 @@ const MemberDossierForm = () => {
     },
 
     bankDetails: [{
+      accountHolderName:"",
       bankName: "",
       branch: "",
       accountNumber: "",
